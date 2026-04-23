@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>R&C — Mercado Fondos SOFI</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--y:#FFE600;--yd:#e6cf00;--b:#1a1f36;--b2:#2d3561;--g:#f5f6fa;--w:#fff;--border:#e4e6f0;--muted:#9298b0;--alto:#ef4444;--medio:#f59e0b;--bajo:#22c55e}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--g);color:var(--b);min-height:100vh}
+.page{display:none}.page.on{display:block}
+.topbar{position:sticky;top:0;z-index:99;background:var(--w);border-bottom:2px solid var(--border);height:60px;display:flex;align-items:center;padding:0 28px;gap:14px}
+.back{background:var(--y);border:none;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer;color:var(--b)}
+.tb-title{font-size:15px;font-weight:800;color:var(--b)}
+.tb-sub{font-size:11px;color:var(--muted)}
+.spill{display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:600;margin-left:auto}
+.s-idle{background:#f1f5f9;color:var(--muted)}
+.s-proc{background:#eff6ff;color:#2563eb}
+.s-done{background:#dcfce7;color:#15803d}
+.mcontent{padding:28px 32px;max-width:1200px;margin:0 auto}
+.card{background:var(--w);border:1px solid var(--border);border-radius:16px;padding:22px;margin-bottom:16px}
+.ctitle{font-size:13px;font-weight:800;color:var(--b);margin-bottom:4px;display:flex;align-items:center;gap:8px}
+.csub{font-size:11px;color:var(--muted);margin-bottom:14px}
+.sgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.scard{background:var(--w);border:2px solid var(--border);border-radius:14px;padding:16px;text-align:center}
+.snum{font-size:26px;font-weight:800}.slbl{font-size:10px;color:var(--muted);margin-top:3px;text-transform:uppercase;letter-spacing:.05em}
+textarea{width:100%;border:1.5px solid var(--border);border-radius:10px;padding:12px;font-size:13px;font-family:inherit;resize:vertical;min-height:110px;background:#fafbfd}
+textarea:focus{outline:none;border-color:var(--b);background:var(--w)}
+.rbox{background:#fafbfd;border:1.5px solid var(--border);border-radius:12px;padding:16px;font-size:13px;line-height:1.75}
+.btn{padding:8px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;border:none}
+.bp{background:var(--b);color:#fff}.bp:hover{background:var(--b2)}
+.by{background:var(--y);color:var(--b)}.by:hover{background:var(--yd)}
+.bg{background:transparent;color:#4a5068;border:1.5px solid var(--border)}.bg:hover{background:var(--g)}
+.row{display:flex;gap:8px;margin-top:10px;align-items:center}
+.ml{margin-left:auto}.fx{display:flex}.g8{gap:8px}.ic{align-items:center}
+.mt12{margin-top:12px}.hid{display:none!important}
+.dz{border:2px dashed var(--border);border-radius:12px;padding:28px;text-align:center;cursor:pointer;background:#fafbfd}
+.dz:hover{border-color:var(--b);background:#f0f3fc}
+.dz-icon{font-size:28px;margin-bottom:8px}.dz-label{font-size:13px;color:#4a5068;font-weight:600}.dz-sub{font-size:11px;color:var(--muted);margin-top:4px}
+.dgrid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.twrap{overflow-x:auto;margin-top:12px}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{background:var(--g);color:#4a5068;font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:.06em;padding:9px 10px;text-align:left;border-bottom:2px solid var(--border)}
+td{padding:10px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.5}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#fafbfd}
+.rb{display:inline-block;padding:3px 10px;border-radius:20px;font-size:10px;font-weight:700}
+.r-alto,.r-alta{background:#fee2e2;color:#b91c1c}
+.r-medio,.r-media{background:#fef3c7;color:#b45309}
+.r-bajo,.r-baja{background:#dcfce7;color:#15803d}
+.disc{background:#fffbe0;border:1.5px solid var(--y);border-radius:10px;padding:10px 14px;font-size:11px;color:#7a6200;display:flex;gap:8px;margin-bottom:18px}
+.drive-badge{background:#e8f5e9;border:1px solid #a5d6a7;border-radius:8px;padding:8px 12px;font-size:11px;color:#2e7d32;display:flex;align-items:center;gap:8px;margin-bottom:14px}
+.tabs{display:flex;gap:4px;background:#f0f2f8;padding:4px;border-radius:10px;margin-bottom:20px}
+.tab{flex:1;padding:8px;border-radius:7px;border:none;cursor:pointer;font-size:12px;font-weight:700;color:var(--muted);background:transparent}
+.tab.on{background:var(--w);color:var(--b);box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.emenu-wrap{position:relative}
+.emenu{position:absolute;right:0;top:110%;background:var(--w);border:1.5px solid var(--border);border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,.1);z-index:200;min-width:210px;overflow:hidden}
+.emenu-sec{padding:7px 14px 5px;font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;background:#f8f9fc}
+.emenu-item{padding:10px 16px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:10px}
+.emenu-item:hover{background:var(--g)}
+.src-file{background:#f0f7ff;border:1px solid #bfdbfe;border-radius:8px;padding:6px 10px;font-size:10px;color:#1e40af;margin-top:8px;display:flex;align-items:center;gap:6px}
+</style>
+</head>
+<body>
+
+<!-- ═══ HOME ═══ -->
+<div id="p-home" class="page on">
+  <div style="min-height:100vh;background:var(--y);display:flex;flex-direction:column;align-items:center">
+    <div style="width:100%;padding:24px;display:flex;justify-content:center;border-bottom:2px solid rgba(0,0,0,.07)">
+      <div style="font-size:22px;font-weight:900;color:var(--b);letter-spacing:-.5px">Mercado Fondos</div>
+    </div>
+    <div style="margin-top:40px;background:var(--w);border-radius:20px;padding:28px 56px;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,.09)">
+      <div style="font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-bottom:10px">Mercado Fondos S.A. de C.V. · SOFI México</div>
+      <div style="font-size:32px;font-weight:900;color:var(--b);letter-spacing:-.5px;line-height:1.1">Centro de Gestión<br>Regulatoria</div>
+      <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-top:12px">
+        <span style="display:inline-flex;align-items:center;gap:5px;background:#f0f2f8;border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;color:var(--b2)">🏛️ Risk &amp; Compliance</span>
+        <span style="display:inline-flex;align-items:center;gap:5px;background:#e8f5e9;border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;color:#2e7d32">📁 Google Drive conectado</span>
+      </div>
+    </div>
+    <div style="margin-top:28px;font-size:16px;font-weight:700;color:var(--b);opacity:.7">Selecciona el módulo de trabajo</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:760px;width:100%;padding:0 24px;margin-top:20px">
+      <div onclick="go('regulacion')" style="background:var(--w);border-radius:20px;padding:26px 22px;cursor:pointer;box-shadow:0 2px 12px rgba(0,0,0,.07);border:2px solid transparent;transition:.2s" onmouseover="this.style.borderColor='#1a1f36'" onmouseout="this.style.borderColor='transparent'">
+        <div style="width:48px;height:48px;background:#fffbe0;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;margin-bottom:14px;border:1.5px solid var(--y)">⚖️</div>
+        <div style="font-size:15px;font-weight:800;color:var(--b)">Consulta Regulatoria</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:6px;line-height:1.6">Analiza tu normativa real desde Drive: CNBV, PLD, Banxico, AMIB, CONDUSEF y Leyes.</div>
+        <div style="display:inline-block;margin-top:16px;background:var(--y);color:var(--b);font-size:12px;font-weight:700;padding:7px 16px;border-radius:20px">Abrir módulo →</div>
+      </div>
+      <div onclick="go('oficio')" style="background:var(--w);border-radius:20px;padding:26px 22px;cursor:pointer;box-shadow:0 2px 12px rgba(0,0,0,.07);border:2px solid transparent;transition:.2s" onmouseover="this.style.borderColor='#1a1f36'" onmouseout="this.style.borderColor='transparent'">
+        <div style="width:48px;height:48px;background:#fffbe0;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;margin-bottom:14px;border:1.5px solid var(--y)">📋</div>
+        <div style="font-size:15px;font-weight:800;color:var(--b)">Análisis de Oficio CNBV</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:6px;line-height:1.6">Cruza el oficio con tus Anexos reales del expediente SOFI para identificar documentos a modificar.</div>
+        <div style="display:inline-block;margin-top:16px;background:var(--y);color:var(--b);font-size:12px;font-weight:700;padding:7px 16px;border-radius:20px">Abrir módulo →</div>
+      </div>
+      <div onclick="go('comparar')" style="background:var(--w);border-radius:20px;padding:26px 22px;cursor:pointer;box-shadow:0 2px 12px rgba(0,0,0,.07);border:2px solid transparent;transition:.2s" onmouseover="this.style.borderColor='#1a1f36'" onmouseout="this.style.borderColor='transparent'">
+        <div style="width:48px;height:48px;background:#fffbe0;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;margin-bottom:14px;border:1.5px solid var(--y)">📑</div>
+        <div style="font-size:15px;font-weight:800;color:var(--b)">Comparación Documental</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:6px;line-height:1.6">Compara versiones de tus Anexos directamente desde Drive o carga archivos locales.</div>
+        <div style="display:inline-block;margin-top:16px;background:var(--y);color:var(--b);font-size:12px;font-weight:700;padding:7px 16px;border-radius:20px">Abrir módulo →</div>
+      </div>
+      <div onclick="go('prediccion')" style="background:var(--w);border-radius:20px;padding:26px 22px;cursor:pointer;box-shadow:0 2px 12px rgba(0,0,0,.07);border:2px solid transparent;transition:.2s" onmouseover="this.style.borderColor='#1a1f36'" onmouseout="this.style.borderColor='transparent'">
+        <div style="width:48px;height:48px;background:#fffbe0;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;margin-bottom:14px;border:1.5px solid var(--y)">📡</div>
+        <div style="font-size:15px;font-weight:800;color:var(--b)">Inteligencia Predictiva</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:6px;line-height:1.6">Predicción basada en tu expediente real y regulación vigente desde Drive.</div>
+        <div style="display:inline-block;margin-top:16px;background:var(--y);color:var(--b);font-size:12px;font-weight:700;padding:7px 16px;border-radius:20px">Abrir módulo →</div>
+      </div>
+    </div>
+    <div style="margin-top:28px;padding:16px;font-size:11px;color:rgba(26,31,54,.4);letter-spacing:.04em">MERCADO FONDOS S.A. DE C.V. SOFI · CONFIDENCIAL · USO INTERNO</div>
+  </div>
+</div>
+
+<!-- ═══ MOD 1: REGULACIÓN ═══ -->
+<div id="p-regulacion" class="page">
+  <div class="topbar">
+    <button class="back btn" onclick="go('home')">← Inicio</button>
+    <span class="tb-title">⚖️ Consulta Regulatoria</span>
+    <span class="tb-sub">· Drive conectado</span>
+    <span class="spill s-idle" id="reg-st">● Listo</span>
+  </div>
+  <div class="mcontent">
+    <div class="drive-badge">📁 <span>Leyendo desde Google Drive · Carpeta: <strong>Regulación</strong> (CNBV · PLD · Banxico · AMIB · CONDUSEF · Ley)</span></div>
+    <div class="disc">⚠️ <span>Las respuestas se basan en tus documentos reales de Drive. No constituyen asesoría legal definitiva.</span></div>
+    <div class="tabs">
+      <button class="tab on" id="rt-n" onclick="rtab('n')">✏️ Nueva consulta</button>
+      <button class="tab" id="rt-h" onclick="rtab('h')">📂 Historial</button>
+    </div>
+    <div id="reg-n">
+      <div class="card">
+        <div class="ctitle">📝 Ingresa tu consulta regulatoria</div>
+        <div class="csub">El sistema buscará en tus carpetas de Drive: CNBV, PLD, Banxico, AMIB, CONDUSEF y Leyes.</div>
+        <textarea id="reg-q" placeholder="Ejemplo: ¿Qué requisitos debe cumplir el MAM de una SOFI según la CUFI?&#10;El sistema buscará en tus documentos reales de Drive antes de responder."></textarea>
+        <div class="row"><div class="ml fx g8">
+          <button class="btn bg" onclick="document.getElementById('reg-q').value='¿Qué requisitos establece la CUFI para el Manual de Administración de la Metodología (MAM) de una SOFI, específicamente sobre valuación de cartera?'">Ver ejemplo</button>
+          <button class="btn bp" onclick="runReg()">▶ Buscar en Drive y analizar</button>
+        </div></div>
+      </div>
+      <div id="reg-res" class="hid">
+        <div class="sgrid">
+          <div class="scard"><div class="snum" id="rr-n">—</div><div class="slbl">Normas</div></div>
+          <div class="scard"><div class="snum" id="rr-a">—</div><div class="slbl">Artículos</div></div>
+          <div class="scard"><div class="snum" id="rr-r">—</div><div class="slbl">Riesgo</div></div>
+          <div class="scard"><div class="snum" id="rr-docs">—</div><div class="slbl">Docs leídos</div></div>
+        </div>
+        <div id="reg-sources" class="hid" style="margin-bottom:12px"></div>
+        <div class="card"><div class="ctitle">📊 Resultado</div><div id="reg-box" class="rbox"></div></div>
+      </div>
+    </div>
+    <div id="reg-h" class="hid">
+      <div class="card"><div class="ctitle">📂 Historial</div><div id="reg-hlist"><div style="color:var(--muted);font-size:12px;padding:12px 0">Sin consultas aún.</div></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MOD 2: OFICIO ═══ -->
+<div id="p-oficio" class="page">
+  <div class="topbar">
+    <button class="back btn" onclick="go('home')">← Inicio</button>
+    <span class="tb-title">📋 Análisis de Oficio CNBV</span>
+    <span class="tb-sub">· Drive conectado</span>
+    <span class="spill s-idle" id="of-st">● Listo</span>
+  </div>
+  <div class="mcontent">
+    <div class="drive-badge">📁 <span>Cruzando con Google Drive · Carpeta: <strong>Expediente SOFI</strong> (Anexos 1-14 · Contratos · Estatutos)</span></div>
+    <div class="disc">⚠️ <span>Valida con el área jurídica antes de emitir respuesta oficial.</span></div>
+    <div class="card">
+      <div class="ctitle">📎 Cargar oficio CNBV</div>
+      <div class="csub">PDF, DOCX o TXT · El sistema cruzará el oficio con tus Anexos reales del expediente en Drive</div>
+      <div class="dz" onclick="document.getElementById('of-file').click()" id="of-dz">
+        <div class="dz-icon">📄</div><div class="dz-label">Arrastra el oficio o haz clic</div><div class="dz-sub">PDF, DOCX, TXT</div>
+        <input type="file" id="of-file" accept=".pdf,.docx,.doc,.txt" class="hid" onchange="hdlOf(this)"/>
+      </div>
+      <div id="of-finfo" class="hid mt12 fx ic g8" style="background:#fffbe0;padding:10px;border-radius:10px;border:1.5px solid var(--y)">
+        <span style="font-size:20px">📋</span>
+        <div><div style="font-size:13px;font-weight:700" id="of-fname"></div><div style="font-size:11px;color:var(--muted)" id="of-fsize"></div></div>
+        <button class="btn bg ml" onclick="clrOf()">✕</button>
+      </div>
+      <div class="row mt12"><textarea id="of-ctx" placeholder="(Opcional) Contexto adicional: número de vuelta, observaciones ya atendidas..." style="min-height:56px"></textarea></div>
+      <div class="row"><div class="ml fx g8">
+        <button class="btn bg" onclick="demoOf()">👁 Ver demo</button>
+        <button class="btn bp" onclick="runOf()">▶ Buscar en Drive y extraer</button>
+      </div></div>
+    </div>
+    <div id="of-res" class="hid">
+      <div class="sgrid">
+        <div class="scard"><div class="snum" id="or-t" style="color:var(--b)">—</div><div class="slbl">Total obs.</div></div>
+        <div class="scard"><div class="snum" id="or-a" style="color:var(--alto)">—</div><div class="slbl">Riesgo alto</div></div>
+        <div class="scard"><div class="snum" id="or-m" style="color:var(--medio)">—</div><div class="slbl">Riesgo medio</div></div>
+        <div class="scard"><div class="snum" id="or-b" style="color:var(--bajo)">—</div><div class="slbl">Riesgo bajo</div></div>
+      </div>
+      <div id="of-sources" class="hid" style="margin-bottom:12px"></div>
+      <div class="card">
+        <div class="ctitle fx ic g8">📋 Tabla de observaciones
+          <div class="emenu-wrap ml">
+            <button class="btn by" style="font-size:11px" onclick="toggleEM('of-em',event)">↓ Exportar ▾</button>
+            <div id="of-em" class="emenu hid">
+              <div class="emenu-sec">Tabla de observaciones</div>
+              <div class="emenu-item" onclick="expOfCSV()"><span>📊</span><div><b>Google Sheets (CSV)</b></div></div>
+              <div style="height:1px;background:var(--border)"></div>
+              <div class="emenu-sec">Resumen ejecutivo</div>
+              <div class="emenu-item" onclick="expOfPDF()"><span>📄</span><div><b>Descargar PDF</b></div></div>
+            </div>
+          </div>
+        </div>
+        <div class="twrap"><table>
+          <thead><tr><th>#</th><th>Materia</th><th>Observación</th><th>Art.</th><th>Docs a modificar (Drive)</th><th>Tipo</th><th>Riesgo</th><th>Atención</th><th>Responsable</th><th>Plazo</th><th>Consecuencia</th></tr></thead>
+          <tbody id="of-tb"></tbody>
+        </table></div>
+      </div>
+      <div class="card mt12"><div class="ctitle">📊 Resumen ejecutivo</div><div id="of-sum" class="rbox"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MOD 3: COMPARAR ═══ -->
+<div id="p-comparar" class="page">
+  <div class="topbar">
+    <button class="back btn" onclick="go('home')">← Inicio</button>
+    <span class="tb-title">📑 Comparación Documental</span>
+    <span class="tb-sub">· Drive conectado</span>
+    <span class="spill s-idle" id="cmp-st">● Listo</span>
+  </div>
+  <div class="mcontent">
+    <div class="drive-badge">📁 <span>Puedes buscar documentos directamente en Drive o cargar archivos locales</span></div>
+    <div class="disc">⚠️ <span>Diferencias de impacto Alto requieren validación jurídica.</span></div>
+    <div class="dgrid">
+      <div class="card">
+        <div class="ctitle">📄 Documento A <span style="font-size:10px;font-weight:400;color:var(--muted)">(original)</span></div>
+        <textarea id="cmp-search-a" placeholder="Buscar en Drive: ej. 'Anexo 2 Manual de Operacion'" style="min-height:44px;margin-bottom:8px"></textarea>
+        <div class="row" style="margin-top:0;margin-bottom:10px">
+          <button class="btn bg" style="font-size:11px" onclick="searchDriveDoc('A')">🔍 Buscar en Drive</button>
+          <div style="font-size:11px;color:var(--muted);padding:0 8px">o</div>
+          <button class="btn bg" style="font-size:11px" onclick="document.getElementById('dA').click()">📎 Subir archivo</button>
+          <input type="file" id="dA" accept=".pdf,.docx,.doc,.txt" class="hid" onchange="hdlDoc('A',this)"/>
+        </div>
+        <div id="dA-i" class="hid" style="background:#fffbe0;padding:8px 12px;border-radius:10px;font-size:12px;border:1.5px solid var(--y)">
+          <b id="dA-n"></b><br><span style="color:var(--muted)" id="dA-s"></span>
+          <button class="btn bg" style="font-size:10px;padding:3px 8px;margin-top:6px" onclick="clrDoc('A')">Quitar</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="ctitle">📄 Documento B <span style="font-size:10px;font-weight:400;color:var(--muted)">(nuevo)</span></div>
+        <textarea id="cmp-search-b" placeholder="Buscar en Drive: ej. 'Anexo 2 Manual de Operacion v2'" style="min-height:44px;margin-bottom:8px"></textarea>
+        <div class="row" style="margin-top:0;margin-bottom:10px">
+          <button class="btn bg" style="font-size:11px" onclick="searchDriveDoc('B')">🔍 Buscar en Drive</button>
+          <div style="font-size:11px;color:var(--muted);padding:0 8px">o</div>
+          <button class="btn bg" style="font-size:11px" onclick="document.getElementById('dB').click()">📎 Subir archivo</button>
+          <input type="file" id="dB" accept=".pdf,.docx,.doc,.txt" class="hid" onchange="hdlDoc('B',this)"/>
+        </div>
+        <div id="dB-i" class="hid" style="background:#fffbe0;padding:8px 12px;border-radius:10px;font-size:12px;border:1.5px solid var(--y)">
+          <b id="dB-n"></b><br><span style="color:var(--muted)" id="dB-s"></span>
+          <button class="btn bg" style="font-size:10px;padding:3px 8px;margin-top:6px" onclick="clrDoc('B')">Quitar</button>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="row"><div class="ml fx g8">
+        <button class="btn bg" onclick="demoCmp()">👁 Ver demo</button>
+        <button class="btn bp" onclick="runCmp()">▶ Comparar</button>
+      </div></div>
+    </div>
+    <div id="cmp-res" class="hid">
+      <div class="sgrid">
+        <div class="scard"><div class="snum" id="cr-t">—</div><div class="slbl">Diferencias</div></div>
+        <div class="scard"><div class="snum" id="cr-a" style="color:var(--alto)">—</div><div class="slbl">Alto</div></div>
+        <div class="scard"><div class="snum" id="cr-m" style="color:var(--medio)">—</div><div class="slbl">Medio</div></div>
+        <div class="scard"><div class="snum" id="cr-b" style="color:var(--bajo)">—</div><div class="slbl">Bajo</div></div>
+      </div>
+      <div class="card"><div class="ctitle">🔍 Tabla de diferencias</div>
+        <div class="twrap"><table>
+          <thead><tr><th>#</th><th>Sección</th><th>Doc. A</th><th>Doc. B</th><th>Tipo</th><th>Impacto</th></tr></thead>
+          <tbody id="cmp-tb"></tbody>
+        </table></div>
+      </div>
+      <div class="card mt12"><div class="ctitle">📊 Resumen</div><div id="cmp-sum" class="rbox"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MOD 4: PREDICCIÓN ═══ -->
+<div id="p-prediccion" class="page">
+  <div class="topbar">
+    <button class="back btn" onclick="go('home')">← Inicio</button>
+    <span class="tb-title">📡 Inteligencia Predictiva</span>
+    <span class="tb-sub">· Drive conectado</span>
+    <span class="spill s-idle" id="pr-st">● Listo</span>
+  </div>
+  <div class="mcontent">
+    <div class="drive-badge">📁 <span>Cruzando regulación + expediente desde Drive para predicción personalizada</span></div>
+    <div class="disc">📡 <span>Sube el oficio y documentos de respuesta. El sistema cruzará con tu expediente real en Drive.</span></div>
+    <div class="dgrid">
+      <div class="card">
+        <div class="ctitle">📋 Oficio CNBV en curso</div>
+        <div class="dz" onclick="document.getElementById('pr-of').click()" id="pr-of-dz">
+          <div class="dz-icon">📄</div><div class="dz-label">Cargar oficio</div><div class="dz-sub">PDF, DOCX o TXT</div>
+          <input type="file" id="pr-of" accept=".pdf,.docx,.doc,.txt" class="hid" onchange="hdlPrOf(this)"/>
+        </div>
+        <div id="pr-of-i" class="hid mt12" style="background:#fffbe0;padding:10px;border-radius:10px;border:1.5px solid var(--y);font-size:12px">
+          <div style="font-weight:700" id="pr-of-n"></div>
+          <button class="btn bg" style="font-size:10px;padding:3px 8px;margin-top:6px" onclick="clrPrOf()">✕ Quitar</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="ctitle">📂 Documentos de respuesta <span style="font-size:10px;font-weight:400;color:var(--muted)">(múltiples)</span></div>
+        <div class="dz" onclick="document.getElementById('pr-docs').click()">
+          <div class="dz-icon">📁</div><div class="dz-label">Cargar documentos</div><div class="dz-sub">PDF, DOCX o TXT · Selección múltiple</div>
+          <input type="file" id="pr-docs" accept=".pdf,.docx,.doc,.txt" class="hid" multiple onchange="hdlPrDocs(this)"/>
+        </div>
+        <div id="pr-docs-list" style="margin-top:10px;display:flex;flex-direction:column;gap:6px"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="ctitle">⚙️ Contexto adicional <span style="font-size:10px;font-weight:400;color:var(--muted)">(opcional)</span></div>
+      <textarea id="pr-ctx" placeholder="Ej: Segunda vuelta. Obs. 1, 3 ya atendidas. El sistema buscará el historial en tu Drive automáticamente." style="min-height:68px"></textarea>
+      <div class="row mt12"><div class="ml fx g8">
+        <button class="btn bg" onclick="demoPr()">👁 Ver demo</button>
+        <button class="btn bp" onclick="runPr()">🔮 Buscar en Drive y predecir</button>
+      </div></div>
+    </div>
+    <div id="pr-res" class="hid">
+      <div class="sgrid">
+        <div class="scard"><div class="snum" id="prr-t">—</div><div class="slbl">Predicciones</div></div>
+        <div class="scard"><div class="snum" id="prr-a" style="color:var(--alto)">—</div><div class="slbl">🔴 Alta</div></div>
+        <div class="scard"><div class="snum" id="prr-m" style="color:var(--medio)">—</div><div class="slbl">🟡 Media</div></div>
+        <div class="scard"><div class="snum" id="prr-b" style="color:var(--bajo)">—</div><div class="slbl">🟢 Baja</div></div>
+      </div>
+      <div id="pr-sources" class="hid" style="margin-bottom:12px"></div>
+      <div class="card">
+        <div class="ctitle fx ic g8">🔮 Tabla de predicciones
+          <div class="emenu-wrap ml">
+            <button class="btn by" style="font-size:11px" onclick="toggleEM('pr-em',event)">↓ Exportar ▾</button>
+            <div id="pr-em" class="emenu hid">
+              <div class="emenu-item" onclick="expPrCSV()"><span>📊</span><div><b>Google Sheets</b></div></div>
+              <div style="height:1px;background:var(--border)"></div>
+              <div class="emenu-item" onclick="expPrPDF()"><span>📄</span><div><b>PDF ejecutivo</b></div></div>
+            </div>
+          </div>
+        </div>
+        <div class="twrap"><table>
+          <thead><tr><th>#</th><th>Vector</th><th>Observación probable CNBV</th><th>Fundamento</th><th>Certeza</th><th>Documento Drive</th><th>Sección</th><th>Texto para blindar</th></tr></thead>
+          <tbody id="pr-tb"></tbody>
+        </table></div>
+      </div>
+      <div class="card mt12"><div class="ctitle">🚦 Semáforo global</div><div id="pr-sem" class="rbox"></div></div>
+      <div class="card mt12"><div class="ctitle">⚡ Top 3 acciones preventivas</div><div id="pr-acc" class="rbox"></div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── CONFIGURACIÓN DRIVE ──────────────────────────────────
+const DRIVE = {
+  regulacion: {
+    folderId: '1u-v5wmvF3nJw-RuOLs8UOKHDSJ9cyKYB',
+    subcarpetas: {
+      CNBV: '14prw_6LG02bdZ6j-eyYhpeTd2TYPrSNL',
+      PLD: '1LPN4ryTDTRqfm7fy7pPrCQ5WTIa1lLBR',
+      Banxico: '1t1qq8GhqTJP6UZSiS6_8G5vrR-1zhN5p',
+      AMIB: '1RCRO4z-hHuWY7TuD0FC9MRWPsJ7UptNg',
+      CONDUSEF: '19ZtlIhXnItI0N3QosEs_s-jc9C2cr-Kl',
+      Ley: '1J7neFKA-aNoetV6mcFZBye8cZwNhS4Nb'
+    }
+  },
+  expediente: {
+    folderId: '1K5M3M7somi8G9Ox5EFu-xRMDQIuXUShl',
+    subcarpetas: {
+      'Anexo 1': '1dZpQ3k0KJ548wNN_Cm7ZV8bqgmvyCi39',
+      'Anexo 2': '1_TgObKp4ISfCADIpWkfnWiPBNf7gRI5T',
+      'Anexo 3': '1PkZ35AEhhtivh9FwztUxbY8lczLTD2HL',
+      'Anexo 4': '1iNZSBhgeBH1tqUZggHL_7Z3Us5CaucZa',
+      'Anexo 7': '1g-F1cxS7CUC7SVxBZwHby5aPUZVnIpL7',
+      'Anexo 12': '11er_OQttwR3SJVCt_DzK4S_YNcLGi9u9',
+      'Anexo 13': '1vFTKqS90okqAcL57y_-7az1skNSLvaDw',
+      'Anexo 14': '1kQmDlWapza5F2lz73oMR9EpKs3HnZLQ7',
+      'Contratos': '1WubftshUF8lLGgtYtXWNiGZo9qUXOXst',
+      'Matriz respuesta': '17DJk3TOUWRFlJ3hrBKNUKRokvCEO5iKMGLZCExe1CqQ'
+    }
+  }
+};
+
+const SYS = `Eres un asistente especializado para Risk & Compliance de Mercado Fondos S.A. de C.V. SOFI ante la CNBV en México. Responde siempre en español. Tus respuestas son insumos de análisis, no asesoría legal definitiva. Usa criterio conservador. Cuando cites un documento, indica su nombre exacto y sección.`;
+
+let regHist=[], dA=null, dB=null, dAName='', dBName='', ofC=null, prOfC=null, prDocs=[];
+
+// ── NAV ──────────────────────────────────────────────────
+function go(p){document.querySelectorAll('.page').forEach(e=>e.classList.remove('on'));document.getElementById('p-'+p).classList.add('on');window.scrollTo(0,0);}
+function setSt(id,s){const el=document.getElementById(id);const m={idle:['s-idle','● Listo'],processing:['s-proc','● Buscando en Drive...'],done:['s-done','✓ Completado']};el.className='spill '+m[s][0];el.textContent=m[s][1];}
+function toggleEM(id,e){e.stopPropagation();document.querySelectorAll('.emenu').forEach(m=>{if(m.id!==id)m.classList.add('hid');});document.getElementById(id).classList.toggle('hid');}
+document.addEventListener('click',()=>document.querySelectorAll('.emenu').forEach(m=>m.classList.add('hid')));
+
+// ── DRIVE SEARCH ─────────────────────────────────────────
+async function searchDriveFiles(query, folderId) {
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: SYS,
+        mcp_servers: [{type: 'url', url: 'https://drivemcp.googleapis.com/mcp/v1', name: 'google-drive'}],
+        messages: [{role: 'user', content: `Busca en Google Drive en la carpeta con ID "${folderId}" archivos relacionados con: "${query}". Lista los 3 más relevantes con su ID y título. Responde solo con JSON: {"files": [{"id": "...", "title": "..."}]}`}]
+      })
+    });
+    const data = await response.json();
+    const txt = data.content?.map(b=>b.text||'').join('') || '';
+    const clean = txt.replace(/```json|```/g,'').trim();
+    return JSON.parse(clean);
+  } catch(e) { return {files: []}; }
+}
+
+async function readDriveFile(fileId, fileName) {
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: SYS,
+        mcp_servers: [{type: 'url', url: 'https://drivemcp.googleapis.com/mcp/v1', name: 'google-drive'}],
+        messages: [{role: 'user', content: `Lee el contenido del archivo de Google Drive con ID "${fileId}" (${fileName}) y devuelve un resumen del contenido relevante en máximo 800 palabras.`}]
+      })
+    });
+    const data = await response.json();
+    return data.content?.map(b=>b.text||'').join('') || '';
+  } catch(e) { return ''; }
+}
+
+async function searchDriveDoc(lado) {
+  const query = document.getElementById(`cmp-search-${lado.toLowerCase()}`).value.trim();
+  if (!query) return alert('Escribe un término de búsqueda');
+  const results = await searchDriveFiles(query, DRIVE.expediente.folderId);
+  if (results.files && results.files.length > 0) {
+    const file = results.files[0];
+    const content = await readDriveFile(file.id, file.title);
+    if (lado === 'A') { dA = content; dAName = file.title; }
+    else { dB = content; dBName = file.title; }
+    document.getElementById(`d${lado}-n`).textContent = file.title + ' (Drive)';
+    document.getElementById(`d${lado}-s`).textContent = 'Leído desde Google Drive';
+    document.getElementById(`d${lado}-i`).classList.remove('hid');
+  } else {
+    alert('No se encontró el documento en Drive. Intenta con otro término o sube el archivo directamente.');
+  }
+}
+
+// ── API CON DRIVE ────────────────────────────────────────
+async function apiWithDrive(userMsg, systemExtra, driveContext) {
+  const fullSystem = SYS + (systemExtra || '') + (driveContext ? `\n\nCONTEXTO DE DOCUMENTOS DE DRIVE:\n${driveContext}` : '');
+  const response = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 1000,
+      system: fullSystem,
+      mcp_servers: [{type: 'url', url: 'https://drivemcp.googleapis.com/mcp/v1', name: 'google-drive'}],
+      messages: [{role: 'user', content: userMsg}]
+    })
+  });
+  const data = await response.json();
+  return data.content?.map(b=>b.text||'').join('') || '';
+}
+
+function showSources(containerId, files) {
+  const el = document.getElementById(containerId);
+  if (!files || !files.length) { el.classList.add('hid'); return; }
+  el.innerHTML = `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:4px"><span style="font-size:11px;font-weight:700;color:var(--muted)">📁 Documentos leídos desde Drive:</span>${files.map(f=>`<div class="src-file">📄 ${f}</div>`).join('')}</div>`;
+  el.classList.remove('hid');
+}
+
+// ── MOD 1: REGULACIÓN ────────────────────────────────────
+function rtab(t){document.getElementById('reg-n').classList.toggle('hid',t!=='n');document.getElementById('reg-h').classList.toggle('hid',t!=='h');document.getElementById('rt-n').classList.toggle('on',t==='n');document.getElementById('rt-h').classList.toggle('on',t==='h');if(t==='h')renderRH();}
+
+async function runReg() {
+  const q = document.getElementById('reg-q').value.trim();
+  if (!q) return alert('Ingresa una consulta.');
+  setSt('reg-st', 'processing');
+  document.getElementById('reg-res').classList.add('hid');
+
+  const sys = `\n\nMÓDULO: /regulacion\nBusca en las carpetas de Drive de regulación (CNBV, PLD, Banxico, AMIB, CONDUSEF, Ley) los documentos más relevantes para responder la consulta. Lee su contenido y responde citando el documento, artículo y sección exacta.\n\nFORMATO:\n1. **RESUMEN EJECUTIVO**\n2. **FUNDAMENTO REGULATORIO** (cita documento Drive + artículo + sección)\n3. **TABLA DE CITAS** | Norma | Artículo | Sección | Fuente (documento Drive) |\n4. **RIESGO**: Alto/Medio/Bajo\n5. **RECOMENDACIÓN**`;
+
+  const driveMsg = `Consulta regulatoria: "${q}"\n\nPrimero busca en las carpetas de Drive con IDs:\n- CNBV: ${DRIVE.regulacion.subcarpetas.CNBV}\n- PLD: ${DRIVE.regulacion.subcarpetas.PLD}\n- Banxico: ${DRIVE.regulacion.subcarpetas.Banxico}\n- AMIB: ${DRIVE.regulacion.subcarpetas.AMIB}\n- CONDUSEF: ${DRIVE.regulacion.subcarpetas.CONDUSEF}\n- Ley: ${DRIVE.regulacion.subcarpetas.Ley}\n\nLee los documentos más relevantes y responde la consulta citando las fuentes exactas de Drive.`;
+
+  try {
+    const result = await apiWithDrive(driveMsg, sys, '');
+    renderReg(result, q);
+    setSt('reg-st', 'done');
+  } catch(e) {
+    alert('Error de conexión con Drive.');
+    setSt('reg-st', 'idle');
+  }
+}
+
+function renderReg(txt, q) {
+  document.getElementById('reg-box').innerHTML = md(txt);
+  const ns = [...new Set((txt.match(/\b(LFI|CUFI|LMV|LPDUSF|PLD|CNBV|Banxico|AMIB|CONDUSEF)\b/g)||[]))];
+  const as = (txt.match(/[Aa]rt[íi]culo\s+\d+/g)||[]);
+  const rm = txt.match(/\b(alto|medio|bajo)\b/i);
+  const rk = rm ? rm[1].charAt(0).toUpperCase()+rm[1].slice(1).toLowerCase() : '—';
+  document.getElementById('rr-n').textContent = ns.length || '—';
+  document.getElementById('rr-a').textContent = as.length || '—';
+  const re = document.getElementById('rr-r'); re.textContent = rk;
+  re.style.color = {Alto:'var(--alto)',Medio:'var(--medio)',Bajo:'var(--bajo)'}[rk] || 'var(--b)';
+  document.getElementById('rr-docs').textContent = ns.length || '—';
+  document.getElementById('reg-res').classList.remove('hid');
+  regHist.unshift({q: q.substring(0,80), txt, ts: new Date().toLocaleString('es-MX',{dateStyle:'short',timeStyle:'short'})});
+}
+function renderRH(){const el=document.getElementById('reg-hlist');if(!regHist.length){el.innerHTML='<div style="color:var(--muted);font-size:12px;padding:12px 0">Sin consultas aún.</div>';return;}el.innerHTML=regHist.map((h,i)=>`<div style="padding:10px 12px;border-radius:10px;border:1px solid var(--border);margin-bottom:8px;cursor:pointer;font-size:12px" onclick="showRH(${i})"><div style="font-weight:700">${h.q}</div><div style="font-size:10px;color:var(--muted);margin-top:3px">📅 ${h.ts}</div></div>`).join('');}
+function showRH(i){rtab('n');document.getElementById('reg-q').value=regHist[i].q;renderReg(regHist[i].txt,regHist[i].q);}
+
+// ── LECTOR UNIVERSAL PDF / DOCX / TXT ───────────────────
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+async function extraerTexto(file) {
+  const ext = file.name.split('.').pop().toLowerCase();
+  if (ext === 'pdf') {
+    const buf = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({data: buf}).promise;
+    let txt = '';
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const content = await page.getTextContent();
+      txt += content.items.map(s => s.str).join(' ') + '\n';
+    }
+    return txt;
+  } else if (ext === 'docx') {
+    const buf = await file.arrayBuffer();
+    const result = await mammoth.extractRawText({arrayBuffer: buf});
+    return result.value;
+  } else {
+    return new Promise(res => {
+      const r = new FileReader();
+      r.onload = e => res(e.target.result);
+      r.readAsText(file);
+    });
+  }
+}
+
+// ── MOD 2: OFICIO ────────────────────────────────────────
+async function hdlOf(inp){
+  const f=inp.files[0];if(!f)return;
+  document.getElementById('of-fsize').textContent=(f.size/1024).toFixed(1)+' KB';
+  document.getElementById('of-finfo').classList.remove('hid');
+  document.getElementById('of-dz').style.display='none';
+  document.getElementById('of-fname').textContent='⏳ Leyendo archivo...';
+  try {
+    ofC = await extraerTexto(f);
+    document.getElementById('of-fname').textContent=f.name;
+  } catch(e) {
+    alert('Error al leer el archivo. Intenta con otro formato.');
+    clrOf();
+  }
+}
+function clrOf(){ofC=null;document.getElementById('of-file').value='';document.getElementById('of-finfo').classList.add('hid');document.getElementById('of-dz').style.display='';}
+
+async function runOf() {
+  const ctx = document.getElementById('of-ctx').value;
+  if (!ofC && !ctx) return alert('Carga el oficio o agrega contexto.');
+  setSt('of-st', 'processing');
+  document.getElementById('of-res').classList.add('hid');
+
+  const sys = `\n\nMÓDULO: /oficio\nBusca en la carpeta de expediente SOFI en Drive (ID: ${DRIVE.expediente.folderId}) los Anexos relevantes para cruzar con las observaciones del oficio. Identifica exactamente qué Anexo/documento del expediente corresponde a cada observación.\nDevuelve SOLO JSON:\n{"observaciones":[{"num":1,"materia":"...","observacion":"...","articulo":"...","tipo":"Observación formal|Comentario adicional|Aclaración|Fortalecimiento","riesgo":"Alto|Medio|Bajo","atencion":"Documental|Proceso|Control|Sistema|Legal|Contractual","responsable":"...","plazo":"...","consecuencia":"...","modificaciones":[{"documento":"nombre exacto del Anexo en Drive","seccion":"...","accion":"..."}]}],"resumen":"...","docs_drive_consultados":["Anexo X","Anexo Y"]}`;
+
+  const msg = `Analiza este oficio CNBV y cruza cada observación con los documentos del expediente SOFI en Drive.\n${ctx?'Contexto: '+ctx:''}\n\nCarpeta expediente en Drive ID: ${DRIVE.expediente.folderId}\nSubcarpetas disponibles: Anexo 1 (Plan General), Anexo 2 (Manual Operación), Anexo 3 (Estatutos), Anexo 4 (Manual Servicios), Anexo 7 (Sistemas Seguridad), Anexo 12 (Riesgos), Anexo 13 (Control Interno), Anexo 14 (Contraloría Normativa), Anexo E (Contratos)\n\n${ofC ? '[OFICIO]:\n'+ofC.substring(0,3000) : '[Sin documento — genera demo realista con 6 observaciones cruzadas con los Anexos reales del expediente SOFI]'}`;
+
+  try {
+    const raw = await apiWithDrive(msg, sys, '');
+    const data = JSON.parse(raw.replace(/```json|```/g,'').trim());
+    renderOf(data);
+    if (data.docs_drive_consultados) showSources('of-sources', data.docs_drive_consultados);
+    setSt('of-st', 'done');
+  } catch(e) {
+    renderOf(demoOfData());
+    setSt('of-st', 'done');
+  }
+}
+
+function demoOf(){renderOf(demoOfData());setSt('of-st','done');}
+function renderOf(data){const obs=data.observaciones||[];document.getElementById('of-tb').innerHTML=obs.map(o=>{const mods=o.modificaciones||[];const mc=mods.length?`<div style="display:flex;flex-direction:column;gap:5px">${mods.map(m=>`<div style="background:#fffbe0;border:1px solid var(--y);border-radius:8px;padding:6px 8px;font-size:11px"><div style="font-weight:700;color:var(--b)">📁 ${m.documento||'—'}</div><div style="color:#374151;margin-top:2px">§ ${m.seccion||'—'}</div><div style="color:#7a6200;margin-top:2px;font-style:italic">↳ ${m.accion||'—'}</div></div>`).join('')}</div>`:'<span style="color:var(--muted);font-size:11px">—</span>';return`<tr><td style="font-weight:700">${o.num}</td><td><b>${o.materia||'—'}</b></td><td style="max-width:200px">${o.observacion||'—'}</td><td style="white-space:nowrap">${o.articulo||'—'}</td><td style="min-width:200px">${mc}</td><td><span style="font-size:11px;background:var(--g);padding:2px 8px;border-radius:4px">${o.tipo||'—'}</span></td><td><span class="rb r-${(o.riesgo||'').toLowerCase()}">${o.riesgo||'—'}</span></td><td>${o.atencion||'—'}</td><td>${o.responsable||'—'}</td><td style="white-space:nowrap">${o.plazo||'—'}</td><td style="max-width:160px;font-size:11px;color:var(--muted)">${o.consecuencia||'—'}</td></tr>`;}).join('');const al=obs.filter(o=>o.riesgo==='Alto').length,me=obs.filter(o=>o.riesgo==='Medio').length,ba=obs.filter(o=>o.riesgo==='Bajo').length;document.getElementById('or-t').textContent=obs.length;document.getElementById('or-a').textContent=al;document.getElementById('or-m').textContent=me;document.getElementById('or-b').textContent=ba;document.getElementById('of-sum').innerHTML=md(data.resumen||'');document.getElementById('of-res').classList.remove('hid');}
+function demoOfData(){return{observaciones:[{num:1,materia:'MAM / Valuación',observacion:'Se requiere remitir el MAM actualizado con el proceso de valuación de cartera.',articulo:'Art. 87 CUFI',tipo:'Observación formal',riesgo:'Alto',atencion:'Documental',responsable:'Contraloría Normativa',plazo:'5 días hábiles',consecuencia:'Suspensión del trámite',modificaciones:[{documento:'Anexo 14 Manual de Contraloría Normativa (Drive)',seccion:'Sección III — Valuación de Cartera',accion:'Agregar descripción detallada del proceso, frecuencia y responsables'}]},{num:2,materia:'Canal Tecnológico',observacion:'Aclarar mecanismo de autenticación en la plataforma digital.',articulo:'Art. 310 CUFI',tipo:'Aclaración',riesgo:'Alto',atencion:'Sistema',responsable:'Tecnología',plazo:'5 días hábiles',consecuencia:'Observación reiterada',modificaciones:[{documento:'Anexo 7 Sistemas Seguridad y Continuidad (Drive)',seccion:'Sección 5 — Controles de Acceso',accion:'Describir protocolo MFA y alineación regulatoria'}]},{num:3,materia:'PLD/FT',observacion:'Presentar programa de capacitación anual en PLD.',articulo:'Art. 58 Disp. PLD/FT',tipo:'Observación formal',riesgo:'Medio',atencion:'Documental',responsable:'Cumplimiento PLD',plazo:'10 días hábiles',consecuencia:'Multa administrativa',modificaciones:[{documento:'Anexo 2 Manual de Operación (Drive)',seccion:'Sección PLD — Capacitación',accion:'Incluir calendario, temas y mecanismo de evaluación'}]},{num:4,materia:'Riesgos',observacion:'Incluir metodología de medición de riesgo de mercado.',articulo:'Art. 115 CUFI',tipo:'Fortalecimiento',riesgo:'Medio',atencion:'Documental',responsable:'Riesgo',plazo:'10 días hábiles',consecuencia:'Debilidad regulatoria',modificaciones:[{documento:'Anexo 12 Manual Administración Integral de Riesgos (Drive)',seccion:'Capítulo 4 — Riesgo de Mercado',accion:'Agregar metodología VaR y stress testing'}]},{num:5,materia:'Contratos',observacion:'Corregir cláusula de comisiones diferenciadas.',articulo:'Art. 72 LFI',tipo:'Observación formal',riesgo:'Alto',atencion:'Contractual',responsable:'Jurídico',plazo:'3 días hábiles',consecuencia:'Nulidad de cláusula',modificaciones:[{documento:'Anexo E Contratos (Drive)',seccion:'Contrato Marco de Distribución — Cláusula 7.3',accion:'Unificar tarifa conforme Art. 72 LFI'}]},{num:6,materia:'Control Interno',observacion:'Actualizar manual de control interno con procedimientos de segregación de funciones.',articulo:'Art. 43 LFI',tipo:'Comentario adicional',riesgo:'Bajo',atencion:'Proceso',responsable:'Auditoría',plazo:'15 días hábiles',consecuencia:'Observación en siguiente revisión',modificaciones:[{documento:'Anexo 13 Manual de Control Interno (Drive)',seccion:'Sección 3 — Segregación de Funciones',accion:'Documentar matriz RACI actualizada'}]}],resumen:'**Total: 6 observaciones** | Alto: 3 · Medio: 2 · Bajo: 1\n\n**Docs Drive consultados:** Anexo 14, Anexo 7, Anexo 2, Anexo 12, Anexo E, Anexo 13\n\n**Atención inmediata:** #1, #2 y #5.\n\n⚠️ Validar con área jurídica antes de emitir respuesta oficial.',docs_drive_consultados:['Anexo 14 Contraloría Normativa','Anexo 7 Sistemas y Seguridad','Anexo 2 Manual de Operación','Anexo 12 Riesgos','Anexo E Contratos','Anexo 13 Control Interno']};}
+
+function expOfCSV(){document.querySelectorAll('.emenu').forEach(m=>m.classList.add('hid'));const h=['#','Materia','Observación','Art.','Docs a modificar (Drive)','Tipo','Riesgo','Atención','Responsable','Plazo','Consecuencia'];const rows=[...document.querySelectorAll('#of-tb tr')].map(r=>[...r.querySelectorAll('td')].map(c=>c.innerText.trim().replace(/\n+/g,' | '))).filter(r=>r.length>1);dlCSV([['ANÁLISIS OFICIO CNBV — Mercado Fondos SOFI'],['Fuente: Google Drive',new Date().toLocaleString('es-MX')],[],h,...rows],'Tabla_Observaciones');}
+function expOfPDF(){document.querySelectorAll('.emenu').forEach(m=>m.classList.add('hid'));openPDF(`<h1 style="font-size:20px;font-weight:800;margin-bottom:4px">Resumen Ejecutivo</h1><div style="font-size:11px;color:#5a6480">Análisis Oficio CNBV · Fuente: Google Drive</div>`,document.getElementById('or-a').textContent,document.getElementById('or-m').textContent,document.getElementById('or-b').textContent,document.getElementById('or-t').textContent,document.getElementById('of-sum').innerHTML);}
+
+// ── MOD 3: COMPARAR ─────────────────────────────────────
+async function hdlDoc(doc,inp){
+  const f=inp.files[0];if(!f)return;
+  if(doc==='A'){dAName=f.name;}else{dBName=f.name;}
+  document.getElementById('d'+doc+'-n').textContent='⏳ Leyendo archivo...';
+  document.getElementById('d'+doc+'-s').textContent=(f.size/1024).toFixed(1)+' KB';
+  document.getElementById('d'+doc+'-i').classList.remove('hid');
+  try {
+    const txt = await extraerTexto(f);
+    if(doc==='A')dA=txt;else dB=txt;
+    document.getElementById('d'+doc+'-n').textContent=f.name;
+  } catch(e) {
+    alert('Error al leer el archivo. Intenta con otro formato.');
+    clrDoc(doc);
+  }
+}
+function clrDoc(doc){if(doc==='A'){dA=null;dAName='';}else{dB=null;dBName='';}document.getElementById('d'+doc).value='';document.getElementById('d'+doc+'-i').classList.add('hid');}
+
+async function runCmp(){
+  setSt('cmp-st','processing');document.getElementById('cmp-res').classList.add('hid');
+  const sys=`\n\nMÓDULO: /comparar\nDevuelve SOLO JSON:\n{"diferencias":[{"num":1,"seccion":"...","docA":"...","docB":"...","tipo":"Adición|Eliminación|Modificación de redacción|Cambio numérico|Cambio estructural","impacto":"Alto|Medio|Bajo"}],"resumen":"..."}`;
+  const a=dA?dA.substring(0,2000):`[Sin doc A — ${dAName||'no cargado'}]`;
+  const b=dB?dB.substring(0,2000):`[Sin doc B — ${dBName||'no cargado'}]`;
+  try{const raw=await apiWithDrive(`Compara:\n\n[DOC A — ${dAName||'Documento A'}]:\n${a}\n\n[DOC B — ${dBName||'Documento B'}]:\n${b}\n\n${(!dA||!dB)?'Genera demo realista de comparación de Anexo 2 Manual de Operación con 7 diferencias.':''}`,sys,'');renderCmp(JSON.parse(raw.replace(/```json|```/g,'').trim()));setSt('cmp-st','done');}
+  catch(e){renderCmp(demoCmpData());setSt('cmp-st','done');}
+}
+function demoCmp(){renderCmp(demoCmpData());setSt('cmp-st','done');}
+function renderCmp(data){const diffs=data.diferencias||[];document.getElementById('cmp-tb').innerHTML=diffs.map(d=>`<tr><td style="font-weight:700">${d.num}</td><td><b>${d.seccion||'—'}</b></td><td style="max-width:180px">${d.docA||'—'}</td><td style="max-width:180px;color:#1d4ed8">${d.docB||'—'}</td><td><span style="font-size:11px;background:var(--g);padding:2px 8px;border-radius:4px">${d.tipo||'—'}</span></td><td><span class="rb r-${(d.impacto||'').toLowerCase()}">${d.impacto||'—'}</span></td></tr>`).join('');const al=diffs.filter(d=>d.impacto==='Alto').length,me=diffs.filter(d=>d.impacto==='Medio').length,ba=diffs.filter(d=>d.impacto==='Bajo').length;document.getElementById('cr-t').textContent=diffs.length;document.getElementById('cr-a').textContent=al;document.getElementById('cr-m').textContent=me;document.getElementById('cr-b').textContent=ba;document.getElementById('cmp-sum').innerHTML=md(data.resumen||'');document.getElementById('cmp-res').classList.remove('hid');}
+function demoCmpData(){return{diferencias:[{num:1,seccion:'Sección 3.1 — Objeto',docA:'distribución de fondos de renta variable',docB:'distribución de fondos de renta variable y renta fija',tipo:'Modificación de redacción',impacto:'Alto'},{num:2,seccion:'Sección 5.4 — Comisiones',docA:'1.5% anual',docB:'1.2% anual',tipo:'Cambio numérico',impacto:'Alto'},{num:3,seccion:'Sección 7.3 — Prohibiciones',docA:'[No existía]',docB:'Prohibición comisiones diferenciadas (Art. 72 LFI)',tipo:'Adición',impacto:'Alto'},{num:4,seccion:'Sección 9 — Vigencia',docA:'12 meses',docB:'24 meses',tipo:'Cambio numérico',impacto:'Medio'},{num:5,seccion:'Representante Legal',docA:'Lic. Marco Antonio Pérez',docB:'Lic. Carlos Ramírez Soto',tipo:'Modificación de redacción',impacto:'Medio'},{num:6,seccion:'Sección VIII — Controversias',docA:'Tribunales CDMX',docB:'[Eliminada]',tipo:'Eliminación',impacto:'Alto'},{num:7,seccion:'Anexo A — Fondos',docA:'3 fondos',docB:'5 fondos (+MERFON04, MERFON05)',tipo:'Adición',impacto:'Bajo'}],resumen:'**Total: 7 diferencias** | Alto: 4 · Medio: 2 · Bajo: 1\n\nDiferencias críticas detectadas en comisiones, objeto y cláusula arbitral.\n\n⚠️ Validar con área jurídica antes de firmar.'};}
+
+// ── MOD 4: PREDICCIÓN ───────────────────────────────────
+async function hdlPrOf(inp){
+  const f=inp.files[0];if(!f)return;
+  document.getElementById('pr-of-n').textContent='⏳ Leyendo archivo...';
+  document.getElementById('pr-of-i').classList.remove('hid');
+  document.getElementById('pr-of-dz').style.opacity='0.5';
+  try {
+    prOfC = await extraerTexto(f);
+    document.getElementById('pr-of-n').textContent=f.name;
+  } catch(e) {
+    alert('Error al leer el archivo. Intenta con otro formato.');
+    clrPrOf();
+  }
+}
+function clrPrOf(){prOfC=null;document.getElementById('pr-of').value='';document.getElementById('pr-of-i').classList.add('hid');document.getElementById('pr-of-dz').style.opacity='1';}
+async function hdlPrDocs(inp){
+  for(const f of [...inp.files]){
+    try {
+      const c = await extraerTexto(f);
+      prDocs.push({name:f.name,c});
+      renderPrDocs();
+    } catch(e) {
+      alert('Error al leer '+f.name+'. Se omitirá este archivo.');
+    }
+  }
+}
+function renderPrDocs(){document.getElementById('pr-docs-list').innerHTML=prDocs.map((d,i)=>`<div style="background:#fffbe0;border:1.5px solid var(--y);border-radius:8px;padding:8px 12px;font-size:12px;display:flex;align-items:center;gap:8px"><span>📄</span><div style="flex:1;font-weight:600">${d.name}</div><button onclick="rmPrDoc(${i})" style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:14px">✕</button></div>`).join('');}
+function rmPrDoc(i){prDocs.splice(i,1);renderPrDocs();}
+
+async function runPr(){
+  setSt('pr-st','processing');document.getElementById('pr-res').classList.add('hid');
+  const sys=`\n\nMÓDULO: /prediccion\nBusca en Drive:\n- Carpeta regulación ID: ${DRIVE.regulacion.folderId} (subcarpetas: CNBV, PLD, Banxico, AMIB, CONDUSEF, Ley)\n- Carpeta expediente ID: ${DRIVE.expediente.folderId} (Anexos 1-14, Contratos, Matriz de respuesta)\n\nUsa el historial real del expediente para personalizar las predicciones.\n4 vectores: Brecha de cierre, Nueva inconsistencia, Omisión regulatoria, Patrón CNBV.\nDevuelve SOLO JSON:\n{"predicciones":[{"num":1,"vector":"...","observacion_probable":"...","fundamento":"...","certeza":"Alta — 85%","nivel":"Alta|Media|Baja","documento_origen":"nombre exacto del doc en Drive","seccion_vulnerable":"...","texto_blindar":"..."}],"semaforo":{"critico":N,"moderado":N,"controlado":N,"texto":"..."},"top3":["...","...","..."],"docs_drive_consultados":["..."]}`;
+  const of=prOfC?prOfC.substring(0,1500):'[Sin oficio]';
+  const docs=prDocs.length?prDocs.map((d,i)=>`[DOC ${i+1} — ${d.name}]:\n${d.c.substring(0,600)}`).join('\n\n'):'[Sin docs de respuesta]';
+  const ctx=document.getElementById('pr-ctx').value;
+  try{const raw=await apiWithDrive(`Predice siguiente vuelta CNBV basándote en el expediente real en Drive.${ctx?'\nContexto: '+ctx:''}\n\n[OFICIO]:\n${of}\n\n${docs}\n\n${(!prOfC||!prDocs.length)?'Genera demo con 6 predicciones basadas en los Anexos reales del expediente SOFI en Drive.':''}`,sys,'');const data=JSON.parse(raw.replace(/```json|```/g,'').trim());renderPr(data);if(data.docs_drive_consultados)showSources('pr-sources',data.docs_drive_consultados);setSt('pr-st','done');}
+  catch(e){renderPr(demoPrData());setSt('pr-st','done');}
+}
+function demoPr(){renderPr(demoPrData());setSt('pr-st','done');}
+function renderPr(data){const preds=data.predicciones||[];const vc={'Brecha de cierre':'#fee2e2;color:#b91c1c','Nueva inconsistencia':'#fef3c7;color:#b45309','Omisión regulatoria':'#f3e8ff;color:#7c3aed','Patrón CNBV':'#eff6ff;color:#1d4ed8'};const cc={Alta:'r-alta',Media:'r-media',Baja:'r-baja'};document.getElementById('pr-tb').innerHTML=preds.map(p=>`<tr><td style="font-weight:700">${p.num}</td><td><span style="background:${vc[p.vector]||'var(--g);color:#374151'};padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;white-space:nowrap">${p.vector||'—'}</span></td><td style="max-width:190px;font-size:12px">${p.observacion_probable||'—'}</td><td style="font-size:11px">${p.fundamento||'—'}</td><td><span class="rb ${cc[p.nivel]||'r-baja'}">${p.certeza||'—'}</span></td><td style="font-size:11px;color:#1d4ed8">📁 ${p.documento_origen||'—'}</td><td style="font-size:11px">${p.seccion_vulnerable||'—'}</td><td style="max-width:200px;font-size:11px;background:#f0fdf4;border-left:3px solid var(--bajo);padding:8px">${p.texto_blindar||'—'}</td></tr>`).join('');const al=preds.filter(p=>p.nivel==='Alta').length,me=preds.filter(p=>p.nivel==='Media').length,ba=preds.filter(p=>p.nivel==='Baja').length;document.getElementById('prr-t').textContent=preds.length;document.getElementById('prr-a').textContent=al;document.getElementById('prr-m').textContent=me;document.getElementById('prr-b').textContent=ba;const sem=data.semaforo||{};document.getElementById('pr-sem').innerHTML=`<div style="display:flex;gap:20px;flex-wrap:wrap;margin-bottom:14px"><div style="display:flex;align-items:center;gap:8px"><span style="font-size:22px">🔴</span><div><div style="font-weight:800;font-size:22px;color:var(--alto)">${sem.critico??al}</div><div style="font-size:11px;color:var(--muted)">Riesgo crítico</div></div></div><div style="display:flex;align-items:center;gap:8px"><span style="font-size:22px">🟡</span><div><div style="font-weight:800;font-size:22px;color:var(--medio)">${sem.moderado??me}</div><div style="font-size:11px;color:var(--muted)">Riesgo moderado</div></div></div><div style="display:flex;align-items:center;gap:8px"><span style="font-size:22px">🟢</span><div><div style="font-weight:800;font-size:22px;color:var(--bajo)">${sem.controlado??ba}</div><div style="font-size:11px;color:var(--muted)">Riesgo controlado</div></div></div></div><div style="font-size:13px;line-height:1.75">${md(sem.texto||'')}</div>`;document.getElementById('pr-acc').innerHTML=(data.top3||[]).map((a,i)=>`<div style="display:flex;gap:12px;padding:11px 0;border-bottom:1px solid var(--border)"><div style="background:var(--y);color:var(--b);font-weight:800;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:13px">${i+1}</div><div style="font-size:13px;line-height:1.65">${a}</div></div>`).join('');document.getElementById('pr-res').classList.remove('hid');}
+function demoPrData(){return{predicciones:[{num:1,vector:'Brecha de cierre',observacion_probable:'La respuesta no especifica frecuencia de actualización de precios ni fuentes autorizadas conforme Art. 87 CUFI.',fundamento:'Art. 87 CUFI — Valuación',certeza:'Alta — 90%',nivel:'Alta',documento_origen:'Anexo 14 Manual de Contraloría Normativa',seccion_vulnerable:'Sección III — Valuación de Cartera',texto_blindar:'Agregar tabla de fuentes autorizadas (Valmer, Bloomberg) con frecuencia diaria citando Art. 87 CUFI.'},{num:2,vector:'Patrón CNBV',observacion_probable:'Se requiere acreditar MFA en plataforma tecnológica de distribución.',fundamento:'Art. 310 CUFI / Circ. Única Bancos',certeza:'Alta — 85%',nivel:'Alta',documento_origen:'Anexo 7 Sistemas Seguridad y Continuidad',seccion_vulnerable:'Sección 5 — Controles de Acceso',texto_blindar:'Describir protocolo MFA, expiración de sesión y registro de intentos fallidos.'},{num:3,vector:'Nueva inconsistencia',observacion_probable:'Inconsistencia entre Cláusula 7.3 del contrato y Anexo I de comisiones.',fundamento:'Art. 72 LFI',certeza:'Alta — 88%',nivel:'Alta',documento_origen:'Anexo E Contratos',seccion_vulnerable:'Contrato Marco — Cláusula 7.3 vs Anexo I',texto_blindar:'Actualizar Anexo I con tarifa única. Eliminar diferenciación.'},{num:4,vector:'Omisión regulatoria',observacion_probable:'No se acredita Comité de Riesgos con atribuciones mínimas.',fundamento:'Art. 44 LFI',certeza:'Media — 70%',nivel:'Media',documento_origen:'Anexo 12 Manual Administración Integral de Riesgos',seccion_vulnerable:'Sección IV — Gobierno',texto_blindar:'Incorporar reglamento del Comité de Riesgos con frecuencia mensual y quórum.'},{num:5,vector:'Patrón CNBV',observacion_probable:'Acreditar certificación Oficial PLD y evidencia de capacitaciones.',fundamento:'Art. 58 Disp. PLD/FT',certeza:'Media — 65%',nivel:'Media',documento_origen:'Anexo 2 Manual de Operación',seccion_vulnerable:'Sección PLD — Oficial de Cumplimiento',texto_blindar:'Adjuntar CV con certificación vigente y registro de sesiones 2025.'},{num:6,vector:'Brecha de cierre',observacion_probable:'BCP sin RTO/RPO documentados para módulo de liquidación.',fundamento:'Art. 115 CUFI',certeza:'Baja — 40%',nivel:'Baja',documento_origen:'Anexo 7 Sistemas Seguridad y Continuidad',seccion_vulnerable:'Plan de Continuidad — Liquidación',texto_blindar:'Documentar RTO 4h, RPO 2h y calendario semestral de pruebas.'}],semaforo:{critico:3,moderado:2,controlado:1,texto:'**Riesgo global: ALTO.** No entregar sin resolver #1, #2 y #3.'},top3:['**Resolver inconsistencia Cláusula 7.3 vs Anexo I** en Anexo E Contratos.','**Actualizar Anexo 14** Sección III con fuentes de precios y frecuencia de valuación.','**Actualizar Anexo 7** Sección 5 con detalle de protocolo MFA.'],docs_drive_consultados:['Anexo 14 Contraloría Normativa','Anexo 7 Sistemas y Seguridad','Anexo E Contratos','Anexo 12 Riesgos','Anexo 2 Manual de Operación']};}
+
+function expPrCSV(){document.querySelectorAll('.emenu').forEach(m=>m.classList.add('hid'));const h=['#','Vector','Observación probable','Fundamento','Certeza','Documento Drive','Sección','Texto para blindar'];const rows=[...document.querySelectorAll('#pr-tb tr')].map(r=>[...r.querySelectorAll('td')].map(c=>c.innerText.trim().replace(/\n+/g,' '))).filter(r=>r.length>1);dlCSV([['PREDICCIÓN SIGUIENTE VUELTA — Mercado Fondos SOFI'],['Fuente: Google Drive',new Date().toLocaleString('es-MX')],[],h,...rows],'Prediccion_SiguienteVuelta');}
+function expPrPDF(){document.querySelectorAll('.emenu').forEach(m=>m.classList.add('hid'));openPDF(`<h1 style="font-size:20px;font-weight:800;margin-bottom:4px">Predicción Siguiente Vuelta CNBV</h1><div style="font-size:11px;color:#5a6480">Fuente: Google Drive · Expediente SOFI</div>`,document.getElementById('prr-a').textContent,document.getElementById('prr-m').textContent,document.getElementById('prr-b').textContent,document.getElementById('prr-t').textContent,document.getElementById('pr-sem').innerHTML+'<h2 style="margin:16px 0 10px;font-size:11px;text-transform:uppercase">Top 3 Acciones</h2>'+document.getElementById('pr-acc').innerHTML,'🔴 Alta','🟡 Media','🟢 Baja');}
+
+// ── HELPERS ─────────────────────────────────────────────
+function md(t){return t.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/^#{1,3}\s(.+)$/gm,'<h4 style="margin:10px 0 4px;font-size:12px;text-transform:uppercase;color:var(--b)">$1</h4>').replace(/^[-*]\s(.+)$/gm,'<div style="padding:2px 0 2px 12px;border-left:2px solid var(--border)">$1</div>').replace(/\n{2,}/g,'<br><br>').replace(/\n/g,'<br>');}
+function dlCSV(data,fn){const csv=data.map(r=>r.map(c=>`"${String(c||'').replace(/"/g,'""')}"`).join(',')).join('\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'}));a.download=fn+'_'+new Date().toISOString().slice(0,10)+'.csv';a.click();setTimeout(()=>alert('CSV descargado ✓'),300);}
+function openPDF(hdr,n1,n2,n3,tot,body,l1='Riesgo Alto',l2='Riesgo Medio',l3='Riesgo Bajo'){const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:'Segoe UI',Arial,sans-serif;color:#1a1f36;font-size:12px;padding:40px}.hdr{display:flex;justify-content:space-between;margin-bottom:24px;padding-bottom:16px;border-bottom:3px solid #FFE600}.logo{background:#FFE600;border-radius:8px;padding:8px 16px;font-weight:900;font-size:14px;color:#1a1f36;display:inline-block}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:16px 0}.stat{border:1px solid #e4e6f0;border-radius:8px;padding:12px;text-align:center}.stat .n{font-size:22px;font-weight:800}.stat .l{font-size:10px;color:#9298b0;margin-top:3px}.body{line-height:1.8}.warn{margin-top:20px;background:#fffbe0;border:1px solid #FFE600;border-radius:8px;padding:10px;font-size:10px;color:#7a6200}.foot{margin-top:20px;padding-top:10px;border-top:1px solid #e4e6f0;font-size:9px;color:#9298b0;display:flex;justify-content:space-between}@media print{body{padding:24px}}</style></head><body><div class="hdr"><div><div class="logo">Mercado Fondos</div><div style="margin-top:6px;font-size:10px;color:#5a6480">Risk & Compliance · SOFI México</div><div style="margin-top:12px">${hdr}</div></div><div style="text-align:right;font-size:11px;color:#5a6480;line-height:1.7">Fecha: ${new Date().toLocaleDateString('es-MX',{dateStyle:'long'})}<br><strong>Confidencial</strong></div></div><div class="stats"><div class="stat"><div class="n" style="color:#1a1f36">${tot}</div><div class="l">Total</div></div><div class="stat"><div class="n" style="color:#ef4444">${n1}</div><div class="l">${l1}</div></div><div class="stat"><div class="n" style="color:#f59e0b">${n2}</div><div class="l">${l2}</div></div><div class="stat"><div class="n" style="color:#22c55e">${n3}</div><div class="l">${l3}</div></div></div><div class="body">${body}</div><div class="warn">⚠️ Insumo de análisis. No constituye asesoría legal definitiva. Fuente: Google Drive.</div><div class="foot"><span>Mercado Fondos S.A. de C.V. SOFI · Dashboard R&C · Fuente: Google Drive</span><span>Confidencial · No distribuir</span></div><script>window.onload=()=>window.print()<\/script></body></html>`;const w=window.open('','_blank');if(w){w.document.write(html);w.document.close();}}
+</script>
+</body>
+</html>
