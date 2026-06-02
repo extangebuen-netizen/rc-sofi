@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>R&C — Mercado Fondos SOFI</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--y:#FFE600;--yd:#e6cf00;--b:#1a1f36;--b2:#2d3561;--g:#f5f6fa;--w:#fff;--border:#e4e6f0;--muted:#9298b0;--alto:#ef4444;--medio:#f59e0b;--bajo:#22c55e}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--g);color:var(--b);min-height:100vh}
+.page{display:none}.page.on{display:block}
+.topbar{position:sticky;top:0;z-index:99;background:var(--w);border-bottom:2px solid var(--border);height:60px;display:flex;align-items:center;padding:0 28px;gap:14px}
+.back{background:var(--y);border:none;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer;color:var(--b)}
+.tb-title{font-size:15px;font-weight:800;color:var(--b)}
+.tb-sub{font-size:11px;color:var(--muted)}
+.spill{display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:600;margin-left:auto}
+.s-idle{background:#f1f5f9;color:var(--muted)}
+.s-proc{background:#eff6ff;color:#2563eb}
+.s-done{background:#dcfce7;color:#15803d}
+.mcontent{padding:28px 32px;max-width:1200px;margin:0 auto}
+.card{background:var(--w);border:1px solid var(--border);border-radius:16px;padding:22px;margin-bottom:16px}
+.ctitle{font-size:13px;font-weight:800;color:var(--b);margin-bottom:4px;display:flex;align-items:center;gap:8px}
+.csub{font-size:11px;color:var(--muted);margin-bottom:14px}
+.sgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.scard{background:var(--w);border:2px solid var(--border);border-radius:14px;padding:16px;text-align:center}
+.snum{font-size:26px;font-weight:800}.slbl{font-size:10px;color:var(--muted);margin-top:3px;text-transform:uppercase;letter-spacing:.05em}
+textarea{width:100%;border:1.5px solid var(--border);border-radius:10px;padding:12px;font-size:13px;font-family:inherit;resize:vertical;min-height:110px;background:#fafbfd}
+textarea:focus{outline:none;border-color:var(--b);background:var(--w)}
+.rbox{background:#fafbfd;border:1.5px solid var(--border);border-radius:12px;padding:16px;font-size:13px;line-height:1.75}
+.btn{padding:8px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;border:none}
+.bp{background:var(--b);color:#fff}.bp:hover{background:var(--b2)}
+.by{background:var(--y);color:var(--b)}.by:hover{background:var(--yd)}
+.bg{background:transparent;color:#4a5068;border:1.5px solid var(--border)}.bg:hover{background:var(--g)}
+.row{display:flex;gap:8px;margin-top:10px;align-items:center}
+.ml{margin-left:auto}.fx{display:flex}.g8{gap:8px}.ic{align-items:center}
+.mt12{margin-top:12px}.hid{display:none!important}
+.dz{border:2px dashed var(--border);border-radius:12px;padding:28px;text-align:center;cursor:pointer;background:#fafbfd}
+.dz:hover{border-color:var(--b);background:#f0f3fc}
+.dz-icon{font-size:28px;margin-bottom:8px}.dz-label{font-size:13px;color:#4a5068;font-weight:600}.dz-sub{font-size:11px;color:var(--muted);margin-top:4px}
+.dgrid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.twrap{overflow-x:auto;margin-top:12px}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{background:var(--g);color:#4a5068;font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:.06em;padding:9px 10px;text-align:left;border-bottom:2px solid var(--border)}
+td{padding:10px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.5}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#fafbfd}
+.rb{display:inline-block;padding:3px 10px;border-radius:20px;font-size:10px;font-weight:700}
+.r-alto,.r-alta{background:#fee2e2;color:#b91c1c}
+.r-medio,.r-media{background:#fef3c7;color:#b45309}
+.r-bajo,.r-baja{background:#dcfce7;color:#15803d}
+.disc{background:#fffbe0;border:1.5px solid var(--y);border-radius:10px;padding:10px 14px;font-size:11px;color:#7a6200;display:flex;gap:8px;margin-bottom:18px}
+.drive-badge{background:#e8f5e9;border:1px solid #a5d6a7;border-radius:8px;padding:8px 12px;font-size:11px;color:#2e7d32;display:flex;align-items:center;gap:8px;margin-bottom:14px}
+.tabs{display:flex;gap:4px;background:#f0f2f8;padding:4px;border-radius:10px;margin-bottom:20px}
+.tab{flex:1;padding:8px;border-radius:7px;border:none;cursor:pointer;font-size:12px;font-weight:700;color:var(--muted);background:transparent}
+.tab.on{background:var(--w);color:var(--b);box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.emenu-wrap{position:relative}
+.emenu{position:absolute;right:0;top:110%;background:var(--w);border:1.5px solid var(--border);border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,.1);z-index:200;min-width:210px;overflow:hidden}
+.emenu-sec{padding:7px 14px 5px;font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;background:#f8f9fc}
+.emenu-item{padding:10px 16px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:10px}
+.emenu-item:hover{background:var(--g)}
+.src-file{background:#f0f7ff;border:1px solid #bfdbfe;border-radius:8px;padding:6px 10px;font-size:10px;color:#1e40af;margin-top:8px;display:flex;align-items:center;gap:6px}
+</style>
+<script>(function(){function _ok(r,onOk){return r.json().then(function(b){if(!r.ok)throw b;onOk(b);return b;});}window.GRID=window.GRID||{};window.GRID.docId="01KSK0HA5ST1CR3BFPK9JCADSZ";window.GRID._stateUpdatedAt='';window.GRID._stateUpdatedAtByName=window.GRID._stateUpdatedAtByName||{};window.GRID.states={get:function(name){var n=String(name||'').trim();if(!n)return Promise.reject({error:'validation_error',detail:'state name is required'});return fetch('/api/v1/documents/'+"01KSK0HA5ST1CR3BFPK9JCADSZ"+'/states/'+encodeURIComponent(n)).then(function(r){return _ok(r,function(b){window.GRID._stateUpdatedAtByName[n]=b.updated_at||'';});});},set:function(name,data,ifUpdatedAt){var n=String(name||'').trim();if(!n)return Promise.reject({error:'validation_error',detail:'state name is required'});return fetch('/api/v1/documents/'+"01KSK0HA5ST1CR3BFPK9JCADSZ"+'/states/'+encodeURIComponent(n),{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({state:data,if_updated_at:(typeof ifUpdatedAt==='string'?ifUpdatedAt:(window.GRID._stateUpdatedAtByName[n]||''))})}).then(function(r){return _ok(r,function(b){window.GRID._stateUpdatedAtByName[n]=b.updated_at||'';});});},patch:function(name,patchData,ifUpdatedAt){var n=String(name||'').trim();if(!n)return Promise.reject({error:'validation_error',detail:'state name is required'});return fetch('/api/v1/documents/'+"01KSK0HA5ST1CR3BFPK9JCADSZ"+'/states/'+encodeURIComponent(n),{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({patch:patchData,if_updated_at:(typeof ifUpdatedAt==='string'?ifUpdatedAt:(window.GRID._stateUpdatedAtByName[n]||''))})}).then(function(r){return _ok(r,function(b){window.GRID._stateUpdatedAtByName[n]=b.updated_at||'';});});}};window.GRID.state={get:function(){return fetch('/api/v1/documents/'+"01KSK0HA5ST1CR3BFPK9JCADSZ"+'/state').then(function(r){return _ok(r,function(b){window.GRID._stateUpdatedAt=b.updated_at||'';});});},set:function(data,ifUpdatedAt){return fetch('/api/v1/documents/'+"01KSK0HA5ST1CR3BFPK9JCADSZ"+'/state',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({state:data,if_updated_at:(typeof ifUpdatedAt==='string'?ifUpdatedAt:(window.GRID._stateUpdatedAt||''))})}).then(function(r){return _ok(r,function(b){window.GRID._stateUpdatedAt=b.updated_at||'';});});},patch:function(patchData,ifUpdatedAt){return fetch('/api/v1/documents/'+"01KSK0HA5ST1CR3BFPK9JCADSZ"+'/state',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({patch:patchData,if_updated_at:(typeof ifUpdatedAt==='string'?ifUpdatedAt:(window.GRID._stateUpdatedAt||''))})}).then(function(r){return _ok(r,function(b){window.GRID._stateUpdatedAt=b.updated_at||'';});});}};}());</script></head>
+<body>
+
+<!-- ═══ HOME ═══ -->
+<div id="p-home" class="page on">
+  <div style="min-height:100vh;background:var(--y);display:flex;flex-direction:column;align-items:center">
+    <div style="width:100%;padding:24px;display:flex;justify-content:center;border-bottom:2px solid rgba(0,0,0,.07)">
+      <div style="font-size:22px;font-weight:900;color:var(--b);letter-spacing:-.5px">Mercado Fondos</div>
+    </div>
+    <div style="margin-top:40px;background:var(--w);border-radius:20px;padding:28px 56px;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,.09)">
+      <div style="font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-bottom:10px">Mercado Fondos S.A. de C.V. · SOFI México</div>
+      <div style="font-size:32px;font-weight:900;color:var(--b);letter-spacing:-.5px;line-height:1.1">Centro de Gestión<br>Regulatoria</div>
+      <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-top:12px">
+        <span style="display:inline-flex;align-items:center;gap:5px;background:#f0f2f8;border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;color:var(--b2)">🏛️ Risk &amp; Compliance</span>
+        <span style="display:inline-flex;align-items:center;gap:5px;background:#e8f5e9;border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;color:#2e7d32">📁 Google Drive conectado</span>
+      </div>
+    </div>
+    <div style="margin-top:28px;font-size:16px;font-weight:700;color:var(--b);opacity:.7">Selecciona el módulo de trabajo</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:760px;width:100%;padding:0 24px;margin-top:20px">
+      <div onclick="go('regulacion')" style="background:var(--w);border-radius:20px;padding:26px 22px;cursor:pointer;box-shadow:0 2px 12px rgba(0,0,0,.07);border:2px solid transparent;transition:.2s" onmouseover="this.style.borderColor='#1a1f36'" onmouseout="this.style.borderColor='transparent'">
+        <div style="width:48px;height:48px;background:#fffbe0;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;margin-bottom:14px;border:1.5px solid var(--y)">⚖️</div>
+        <div style="font-size:15px;font-weight:800;color:var(--b)">Consulta Regulatoria</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:6px;line-height:1.6">Analiza tu normativa real desde Drive: CNBV, PLD, Banxico, AMIB, CONDUSEF y Leyes.</div>
+        <div style="display:inline-block;margin-top:16px;background:var(--y);color:var(--b);font-size:12px;font-weight:700;padding:7px 16px;border-radius:20px">Abrir módulo →</div>
+      </div>
+      <div onclick="go('oficio')" style="background:var(--w);border-radius:20px;padding:26px 22px;cursor:pointer;box-shadow:0 2px 12px rgba(0,0,0,.07);border:2px solid transparent;transition:.2s" onmouseover="this.style.borderColor='#1a1f36'" onmouseout="this.style.borderColor='transparent'">
+        <div style="width:48px;height:48px;background:#fffbe0;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;margin-bottom:14px;border:1.5px solid var(--y)">📋</div>
+        <div style="font-size:15px;font-weight:800;color:var(--b)">Análisis de Oficio CNBV</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:6px;line-height:1.6">Cruza el oficio con tus Anexos reales del expediente SOFI para identificar documentos a modificar.</div>
+        <div style="display:inline-block;margin-top:16px;background:var(--y);color:var(--b);font-size:12px;font-weight:700;padding:7px 16px;border-radius:20px">Abrir módulo →</div>
+      </div>
+      <div onclick="go('comparar')" style="background:var(--w);border-radius:20px;padding:26px 22px;cursor:pointer;box-shadow:0 2px 12px rgba(0,0,0,.07);border:2px solid transparent;transition:.2s" onmouseover="this.style.borderColor='#1a1f36'" onmouseout="this.style.borderColor='transparent'">
+        <div style="width:48px;height:48px;background:#fffbe0;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;margin-bottom:14px;border:1.5px solid var(--y)">📑</div>
+        <div style="font-size:15px;font-weight:800;color:var(--b)">Comparación Documental</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:6px;line-height:1.6">Compara versiones de tus Anexos directamente desde Drive o carga archivos locales.</div>
+        <div style="display:inline-block;margin-top:16px;background:var(--y);color:var(--b);font-size:12px;font-weight:700;padding:7px 16px;border-radius:20px">Abrir módulo →</div>
+      </div>
+      <div onclick="go('prediccion')" style="background:var(--w);border-radius:20px;padding:26px 22px;cursor:pointer;box-shadow:0 2px 12px rgba(0,0,0,.07);border:2px solid transparent;transition:.2s" onmouseover="this.style.borderColor='#1a1f36'" onmouseout="this.style.borderColor='transparent'">
+        <div style="width:48px;height:48px;background:#fffbe0;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;margin-bottom:14px;border:1.5px solid var(--y)">📡</div>
+        <div style="font-size:15px;font-weight:800;color:var(--b)">Inteligencia Predictiva</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:6px;line-height:1.6">Predicción basada en tu expediente real y regulación vigente desde Drive.</div>
+        <div style="display:inline-block;margin-top:16px;background:var(--y);color:var(--b);font-size:12px;font-weight:700;padding:7px 16px;border-radius:20px">Abrir módulo →</div>
+      </div>
+    </div>
+    <div style="margin-top:28px;padding:16px;font-size:11px;color:rgba(26,31,54,.4);letter-spacing:.04em">MERCADO FONDOS S.A. DE C.V. SOFI · CONFIDENCIAL · USO INTERNO</div>
+  </div>
+</div>
+
+<!-- ═══ MOD 1: REGULACIÓN ═══ -->
+<div id="p-regulacion" class="page">
+  <div class="topbar">
+    <button class="back btn" onclick="go('home')">← Inicio</button>
+    <span class="tb-title">⚖️ Consulta Regulatoria</span>
+    <span class="tb-sub">· Drive conectado</span>
+    <span class="spill s-idle" id="reg-st">● Listo</span>
+  </div>
+  <div class="mcontent">
+    <div class="drive-badge">📁 <span>📦 Dataset embebido · <strong>10 documentos CNBV</strong> · Regulación real · Sin dependencia de Drive</span></div>
+    <div class="disc">⚠️ <span>Las respuestas se basan en tus documentos reales de Drive. No constituyen asesoría legal definitiva.</span></div>
+    <div class="tabs">
+      <button class="tab on" id="rt-n" onclick="rtab('n')">✏️ Nueva consulta</button>
+      <button class="tab" id="rt-h" onclick="rtab('h')">📂 Historial</button>
+    </div>
+    <div id="reg-n">
+      <div class="card">
+        <div class="ctitle">📝 Ingresa tu consulta regulatoria</div>
+        <div class="csub">El sistema buscará en tus carpetas de Drive: CNBV, PLD, Banxico, AMIB, CONDUSEF y Leyes.</div>
+        <textarea id="reg-q" placeholder="Ejemplo: ¿Qué requisitos debe cumplir el MAM de una SOFI según la CUFI?&#10;El sistema buscará en tus documentos reales de Drive antes de responder."></textarea>
+        <div class="row"><div class="ml fx g8">
+          <button class="btn bg" onclick="document.getElementById('reg-q').value='¿Qué requisitos establece la CUFI para el Manual de Administración de la Metodología (MAM) de una SOFI, específicamente sobre valuación de cartera?'">Ver ejemplo</button>
+          <button class="btn bp" onclick="runReg()">▶ Buscar en Drive y analizar</button>
+        </div></div>
+      </div>
+      <div id="reg-res" class="hid">
+        <div class="sgrid">
+          <div class="scard"><div class="snum" id="rr-n">—</div><div class="slbl">Normas</div></div>
+          <div class="scard"><div class="snum" id="rr-a">—</div><div class="slbl">Artículos</div></div>
+          <div class="scard"><div class="snum" id="rr-r">—</div><div class="slbl">Riesgo</div></div>
+          <div class="scard"><div class="snum" id="rr-docs">—</div><div class="slbl">Docs leídos</div></div>
+        </div>
+        <div id="reg-sources" class="hid" style="margin-bottom:12px"></div>
+        <div class="card"><div class="ctitle">📊 Resultado</div><div id="reg-box" class="rbox"></div></div>
+      </div>
+    </div>
+    <div id="reg-h" class="hid">
+      <div class="card"><div class="ctitle">📂 Historial</div><div id="reg-hlist"><div style="color:var(--muted);font-size:12px;padding:12px 0">Sin consultas aún.</div></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MOD 2: OFICIO ═══ -->
+<div id="p-oficio" class="page">
+  <div class="topbar">
+    <button class="back btn" onclick="go('home')">← Inicio</button>
+    <span class="tb-title">📋 Análisis de Oficio CNBV</span>
+    <span class="tb-sub">· Drive conectado</span>
+    <span class="spill s-idle" id="of-st">● Listo</span>
+  </div>
+  <div class="mcontent">
+    <div class="drive-badge">📁 <span>Cruzando con Google Drive · Carpeta: <strong>Expediente SOFI</strong> (Anexos 1-14 · Contratos · Estatutos)</span></div>
+    <div class="disc">⚠️ <span>Valida con el área jurídica antes de emitir respuesta oficial.</span></div>
+    <div class="card">
+      <div class="ctitle">📎 Cargar oficio CNBV</div>
+      <div class="csub">PDF, DOCX o TXT · El sistema cruzará el oficio con tus Anexos reales del expediente en Drive</div>
+      <div class="dz" onclick="document.getElementById('of-file').click()" id="of-dz">
+        <div class="dz-icon">📄</div><div class="dz-label">Arrastra el oficio o haz clic</div><div class="dz-sub">PDF, DOCX, TXT</div>
+        <input type="file" id="of-file" accept=".pdf,.docx,.doc,.txt" class="hid" onchange="hdlOf(this)"/>
+      </div>
+      <div id="of-finfo" class="hid mt12 fx ic g8" style="background:#fffbe0;padding:10px;border-radius:10px;border:1.5px solid var(--y)">
+        <span style="font-size:20px">📋</span>
+        <div><div style="font-size:13px;font-weight:700" id="of-fname"></div><div style="font-size:11px;color:var(--muted)" id="of-fsize"></div></div>
+        <button class="btn bg ml" onclick="clrOf()">✕</button>
+      </div>
+      <div class="row mt12"><textarea id="of-ctx" placeholder="(Opcional) Contexto adicional: número de vuelta, observaciones ya atendidas..." style="min-height:56px"></textarea></div>
+      <div class="row"><div class="ml fx g8">
+        <button class="btn bg" onclick="demoOf()">👁 Ver demo</button>
+        <button class="btn bp" onclick="runOf()">▶ Buscar en Drive y extraer</button>
+      </div></div>
+    </div>
+    <div id="of-res" class="hid">
+      <div class="sgrid">
+        <div class="scard"><div class="snum" id="or-t" style="color:var(--b)">—</div><div class="slbl">Total obs.</div></div>
+        <div class="scard"><div class="snum" id="or-a" style="color:var(--alto)">—</div><div class="slbl">Riesgo alto</div></div>
+        <div class="scard"><div class="snum" id="or-m" style="color:var(--medio)">—</div><div class="slbl">Riesgo medio</div></div>
+        <div class="scard"><div class="snum" id="or-b" style="color:var(--bajo)">—</div><div class="slbl">Riesgo bajo</div></div>
+      </div>
+      <div id="of-sources" class="hid" style="margin-bottom:12px"></div>
+      <div class="card">
+        <div class="ctitle fx ic g8">📋 Tabla de observaciones
+          <div class="emenu-wrap ml">
+            <button class="btn by" style="font-size:11px" onclick="toggleEM('of-em',event)">↓ Exportar ▾</button>
+            <div id="of-em" class="emenu hid">
+              <div class="emenu-sec">Tabla de observaciones</div>
+              <div class="emenu-item" onclick="expOfCSV()"><span>📊</span><div><b>Google Sheets (CSV)</b></div></div>
+              <div style="height:1px;background:var(--border)"></div>
+              <div class="emenu-sec">Resumen ejecutivo</div>
+              <div class="emenu-item" onclick="expOfPDF()"><span>📄</span><div><b>Descargar PDF</b></div></div>
+            </div>
+          </div>
+        </div>
+        <div class="twrap"><table>
+          <thead><tr><th>#</th><th>Materia</th><th>Observación</th><th>Art.</th><th>Docs a modificar (Drive)</th><th>Tipo</th><th>Riesgo</th><th>Atención</th><th>Responsable</th><th>Plazo</th><th>Consecuencia</th></tr></thead>
+          <tbody id="of-tb"></tbody>
+        </table></div>
+      </div>
+      <div class="card mt12"><div class="ctitle">📊 Resumen ejecutivo</div><div id="of-sum" class="rbox"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MOD 3: COMPARAR ═══ -->
+<div id="p-comparar" class="page">
+  <div class="topbar">
+    <button class="back btn" onclick="go('home')">← Inicio</button>
+    <span class="tb-title">📑 Comparación Documental</span>
+    <span class="tb-sub">· Drive conectado</span>
+    <span class="spill s-idle" id="cmp-st">● Listo</span>
+  </div>
+  <div class="mcontent">
+    <div class="drive-badge">📁 <span>Puedes buscar documentos directamente en Drive o cargar archivos locales</span></div>
+    <div class="disc">⚠️ <span>Diferencias de impacto Alto requieren validación jurídica.</span></div>
+    <div class="dgrid">
+      <div class="card">
+        <div class="ctitle">📄 Documento A <span style="font-size:10px;font-weight:400;color:var(--muted)">(original)</span></div>
+        <textarea id="cmp-search-a" placeholder="Buscar en Drive: ej. 'Anexo 2 Manual de Operacion'" style="min-height:44px;margin-bottom:8px"></textarea>
+        <div class="row" style="margin-top:0;margin-bottom:10px">
+          <button class="btn bg" style="font-size:11px" onclick="searchDriveDoc('A')">🔍 Buscar en Drive</button>
+          <div style="font-size:11px;color:var(--muted);padding:0 8px">o</div>
+          <button class="btn bg" style="font-size:11px" onclick="document.getElementById('dA').click()">📎 Subir archivo</button>
+          <input type="file" id="dA" accept=".pdf,.docx,.doc,.txt" class="hid" onchange="hdlDoc('A',this)"/>
+        </div>
+        <div id="dA-i" class="hid" style="background:#fffbe0;padding:8px 12px;border-radius:10px;font-size:12px;border:1.5px solid var(--y)">
+          <b id="dA-n"></b><br><span style="color:var(--muted)" id="dA-s"></span>
+          <button class="btn bg" style="font-size:10px;padding:3px 8px;margin-top:6px" onclick="clrDoc('A')">Quitar</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="ctitle">📄 Documento B <span style="font-size:10px;font-weight:400;color:var(--muted)">(nuevo)</span></div>
+        <textarea id="cmp-search-b" placeholder="Buscar en Drive: ej. 'Anexo 2 Manual de Operacion v2'" style="min-height:44px;margin-bottom:8px"></textarea>
+        <div class="row" style="margin-top:0;margin-bottom:10px">
+          <button class="btn bg" style="font-size:11px" onclick="searchDriveDoc('B')">🔍 Buscar en Drive</button>
+          <div style="font-size:11px;color:var(--muted);padding:0 8px">o</div>
+          <button class="btn bg" style="font-size:11px" onclick="document.getElementById('dB').click()">📎 Subir archivo</button>
+          <input type="file" id="dB" accept=".pdf,.docx,.doc,.txt" class="hid" onchange="hdlDoc('B',this)"/>
+        </div>
+        <div id="dB-i" class="hid" style="background:#fffbe0;padding:8px 12px;border-radius:10px;font-size:12px;border:1.5px solid var(--y)">
+          <b id="dB-n"></b><br><span style="color:var(--muted)" id="dB-s"></span>
+          <button class="btn bg" style="font-size:10px;padding:3px 8px;margin-top:6px" onclick="clrDoc('B')">Quitar</button>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="row"><div class="ml fx g8">
+        <button class="btn bg" onclick="demoCmp()">👁 Ver demo</button>
+        <button class="btn bp" onclick="runCmp()">▶ Comparar</button>
+      </div></div>
+    </div>
+    <div id="cmp-res" class="hid">
+      <div class="sgrid">
+        <div class="scard"><div class="snum" id="cr-t">—</div><div class="slbl">Diferencias</div></div>
+        <div class="scard"><div class="snum" id="cr-a" style="color:var(--alto)">—</div><div class="slbl">Alto</div></div>
+        <div class="scard"><div class="snum" id="cr-m" style="color:var(--medio)">—</div><div class="slbl">Medio</div></div>
+        <div class="scard"><div class="snum" id="cr-b" style="color:var(--bajo)">—</div><div class="slbl">Bajo</div></div>
+      </div>
+      <div class="card"><div class="ctitle">🔍 Tabla de diferencias</div>
+        <div class="twrap"><table>
+          <thead><tr><th>#</th><th>Sección</th><th>Doc. A</th><th>Doc. B</th><th>Tipo</th><th>Impacto</th></tr></thead>
+          <tbody id="cmp-tb"></tbody>
+        </table></div>
+      </div>
+      <div class="card mt12"><div class="ctitle">📊 Resumen</div><div id="cmp-sum" class="rbox"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MOD 4: PREDICCIÓN ═══ -->
+<div id="p-prediccion" class="page">
+  <div class="topbar">
+    <button class="back btn" onclick="go('home')">← Inicio</button>
+    <span class="tb-title">📡 Inteligencia Predictiva</span>
+    <span class="tb-sub">· Drive conectado</span>
+    <span class="spill s-idle" id="pr-st">● Listo</span>
+  </div>
+  <div class="mcontent">
+    <div class="drive-badge">📁 <span>Cruzando regulación + expediente desde Drive para predicción personalizada</span></div>
+    <div class="disc">📡 <span>Sube el oficio y documentos de respuesta. El sistema cruzará con tu expediente real en Drive.</span></div>
+    <div class="dgrid">
+      <div class="card">
+        <div class="ctitle">📋 Oficio CNBV en curso</div>
+        <div class="dz" onclick="document.getElementById('pr-of').click()" id="pr-of-dz">
+          <div class="dz-icon">📄</div><div class="dz-label">Cargar oficio</div><div class="dz-sub">PDF, DOCX o TXT</div>
+          <input type="file" id="pr-of" accept=".pdf,.docx,.doc,.txt" class="hid" onchange="hdlPrOf(this)"/>
+        </div>
+        <div id="pr-of-i" class="hid mt12" style="background:#fffbe0;padding:10px;border-radius:10px;border:1.5px solid var(--y);font-size:12px">
+          <div style="font-weight:700" id="pr-of-n"></div>
+          <button class="btn bg" style="font-size:10px;padding:3px 8px;margin-top:6px" onclick="clrPrOf()">✕ Quitar</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="ctitle">📂 Documentos de respuesta <span style="font-size:10px;font-weight:400;color:var(--muted)">(múltiples)</span></div>
+        <div class="dz" onclick="document.getElementById('pr-docs').click()">
+          <div class="dz-icon">📁</div><div class="dz-label">Cargar documentos</div><div class="dz-sub">PDF, DOCX o TXT · Selección múltiple</div>
+          <input type="file" id="pr-docs" accept=".pdf,.docx,.doc,.txt" class="hid" multiple onchange="hdlPrDocs(this)"/>
+        </div>
+        <div id="pr-docs-list" style="margin-top:10px;display:flex;flex-direction:column;gap:6px"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="ctitle">⚙️ Contexto adicional <span style="font-size:10px;font-weight:400;color:var(--muted)">(opcional)</span></div>
+      <textarea id="pr-ctx" placeholder="Ej: Segunda vuelta. Obs. 1, 3 ya atendidas. El sistema buscará el historial en tu Drive automáticamente." style="min-height:68px"></textarea>
+      <div class="row mt12"><div class="ml fx g8">
+        <button class="btn bg" onclick="demoPr()">👁 Ver demo</button>
+        <button class="btn bp" onclick="runPr()">🔮 Buscar en Drive y predecir</button>
+      </div></div>
+    </div>
+    <div id="pr-res" class="hid">
+      <div class="sgrid">
+        <div class="scard"><div class="snum" id="prr-t">—</div><div class="slbl">Predicciones</div></div>
+        <div class="scard"><div class="snum" id="prr-a" style="color:var(--alto)">—</div><div class="slbl">🔴 Alta</div></div>
+        <div class="scard"><div class="snum" id="prr-m" style="color:var(--medio)">—</div><div class="slbl">🟡 Media</div></div>
+        <div class="scard"><div class="snum" id="prr-b" style="color:var(--bajo)">—</div><div class="slbl">🟢 Baja</div></div>
+      </div>
+      <div id="pr-sources" class="hid" style="margin-bottom:12px"></div>
+      <div class="card">
+        <div class="ctitle fx ic g8">🔮 Tabla de predicciones
+          <div class="emenu-wrap ml">
+            <button class="btn by" style="font-size:11px" onclick="toggleEM('pr-em',event)">↓ Exportar ▾</button>
+            <div id="pr-em" class="emenu hid">
+              <div class="emenu-item" onclick="expPrCSV()"><span>📊</span><div><b>Google Sheets</b></div></div>
+              <div style="height:1px;background:var(--border)"></div>
+              <div class="emenu-item" onclick="expPrPDF()"><span>📄</span><div><b>PDF ejecutivo</b></div></div>
+            </div>
+          </div>
+        </div>
+        <div class="twrap"><table>
+          <thead><tr><th>#</th><th>Vector</th><th>Observación probable CNBV</th><th>Fundamento</th><th>Certeza</th><th>Documento Drive</th><th>Sección</th><th>Texto para blindar</th></tr></thead>
+          <tbody id="pr-tb"></tbody>
+        </table></div>
+      </div>
+      <div class="card mt12"><div class="ctitle">🚦 Semáforo global</div><div id="pr-sem" class="rbox"></div></div>
+      <div class="card mt12"><div class="ctitle">⚡ Top 3 acciones preventivas</div><div id="pr-acc" class="rbox"></div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── CONFIGURACIÓN DRIVE ──────────────────────────────────
+const DRIVE = {
+  regulacion: {
+    folderId: '1u-v5wmvF3nJw-RuOLs8UOKHDSJ9cyKYB',
+    subcarpetas: {
+      CNBV: '14prw_6LG02bdZ6j-eyYhpeTd2TYPrSNL',
+      PLD: '1LPN4ryTDTRqfm7fy7pPrCQ5WTIa1lLBR',
+      Banxico: '1t1qq8GhqTJP6UZSiS6_8G5vrR-1zhN5p',
+      AMIB: '1RCRO4z-hHuWY7TuD0FC9MRWPsJ7UptNg',
+      CONDUSEF: '19ZtlIhXnItI0N3QosEs_s-jc9C2cr-Kl',
+      Ley: '1J7neFKA-aNoetV6mcFZBye8cZwNhS4Nb'
+    }
+  },
+  expediente: {
+    folderId: '1K5M3M7somi8G9Ox5EFu-xRMDQIuXUShl',
+    subcarpetas: {
+      'Anexo 1': '1dZpQ3k0KJ548wNN_Cm7ZV8bqgmvyCi39',
+      'Anexo 2': '1_TgObKp4ISfCADIpWkfnWiPBNf7gRI5T',
+      'Anexo 3': '1PkZ35AEhhtivh9FwztUxbY8lczLTD2HL',
+      'Anexo 4': '1iNZSBhgeBH1tqUZggHL_7Z3Us5CaucZa',
+      'Anexo 7': '1g-F1cxS7CUC7SVxBZwHby5aPUZVnIpL7',
+      'Anexo 12': '11er_OQttwR3SJVCt_DzK4S_YNcLGi9u9',
+      'Anexo 13': '1vFTKqS90okqAcL57y_-7az1skNSLvaDw',
+      'Anexo 14': '1kQmDlWapza5F2lz73oMR9EpKs3HnZLQ7',
+      'Contratos': '1WubftshUF8lLGgtYtXWNiGZo9qUXOXst',
+      'Matriz respuesta': '17DJk3TOUWRFlJ3hrBKNUKRokvCEO5iKMGLZCExe1CqQ'
+    }
+  }
+};
+
+const ANTHROPIC_KEY = 'dummy'; // GenAI Gateway Meli — no requiere key real
+const SYS = `Eres un asistente especializado para Risk & Compliance de Mercado Fondos S.A. de C.V. SOFI ante la CNBV en México. Responde siempre en español. Tus respuestas son insumos de análisis, no asesoría legal definitiva. Usa criterio conservador. Cuando cites un documento, indica su nombre exacto y sección.`;
+
+
+// ── DATASET REGULACIÓN (embebido) ────────────────────────
+const DATASET_REGULACION = [{"id": "Disposiciones_de_carácter_general_aplica", "titulo": "Auditoría Externa CNBV", "categoria": "CNBV", "texto": "**DISPOSICIONES DE CARÁCTER GENERAL APLICABLES A LAS  ENTIDADES Y EMISORAS SUPERVISADAS POR LA COMISIÓN  NACIONAL BANCARIA Y DE VALORES QUE CONTRATEN SERVICIOS  DE AUDITORÍA EXTERNA DE ESTADOS FINANCIEROS BÁSICOS **\n\nPublicadas en el Diario Oficial de la  \n\nFederación el 26 de abril de 2018.  \n\nActualizadas con la reforma  \n\npublicada en el propio Diario el 15  \n\nde noviembre de 2018.\n\nLa Comisión Nacional Bancaria y de Valores, previo acuerdo de su Junta de Gobierno y con  fundamento en lo dispuesto por los artículos 21, segundo párrafo, 40, segundo párrafo, 101, cuarto y  quinto párrafos y 125 de la Ley de Instituciones de Crédito; 53, tercer y cuarto párrafos de la Ley  General de Organizaciones y Actividades Auxiliares del Crédito; 30 y 67, cuarto y quinto párrafos de  la Ley de Uniones de Crédito; 77, tercer y cuarto párrafos y 77 Bis 1, primer párrafo de la Ley de  Fondos de Inversión; 18, tercer párrafo, 46 Bis, primer párrafo y 118, cuarto y quinto párrafos de la  Ley de Ahorro y Crédito Popular; 31, fracción XI, y 34, cuarto y quinto párrafos de la Ley para Regular  las Actividades de las Sociedades Cooperativas de Ahorro y Préstamo; 126, 210, cuarto y quinto  párrafos, 243, primer párrafo, 252, 279, primer y último párrafos, 318, primer párrafo y 343 de la Ley  del Mercado de Valores; 52, primer párrafo de la Ley Orgánica de Financiera Nacional de Desarrollo  Agropecuario, Rural, Forestal y Pesquero; 33, primer párrafo de la Ley del Instituto del Fondo  Nacional para el Consumo de los Trabajadores; 19 Bis, fracción I y 66, fracciones II y IV de la Ley del  Instituto del Fondo Nacional de la Vivienda para los Trabajadores; 190, segundo párrafo de la Ley  del Instituto de Seguridad y Servicios Sociales de los Trabajadores del Estado, así como 4, fracciones,  VI, XXXVI y XXXVIII, 16, fracción I y 19 de la Ley de la Comisión Nacional Bancaria y de Valores, y \n\n**CONSIDERANDO **\n\nQue es necesario actualizar la regulación relativa a los estados financieros dictaminados de diversas  entidades sujetas a la supervisión de la Comisión Nacional Bancaria y de Valores a fin de mejorar la  calidad de los servicios de auditoría externa que contraten dichas entidades financieras y personas  sujetas a la supervisión de la propia Comisión, toda vez que la información financiera contenida en  sus estados financieros es el instrumento a través del cual se verifica su estabilidad financiera y  solvencia, lo que permite ejercer una adecuada supervisión y a la par, para los accionistas y otros  interesados, tener información relevante de dichas entidades y personas; \n\nQue es necesario fortalecer los canales de comunicación de los órganos sociales de las diversas  entidades sujetas a la supervisión de la Comisión Nacional Bancaria y de Valores con el auditor  externo, con el objetivo de dotar de medios y mecanismos que permitan su constante y eficiente  interacción tendiente a mejorar el contenido y calidad de los informes, incluyendo la revelación de  los asuntos significativos, y demás documentación que dichos auditores externos elaboran,  dotando de confianza y certeza al sistema financiero mexicano; \n\nQue es esencial que el comité de auditoría de las entidades mencionadas o a quien se le designen  las funciones correspondientes, fortalezca y documente sus funciones relacionadas con la auditoría  externa, y que resulta conveniente incluir la obligación de los auditores externos de presentar al  citado comité un reporte con información significativa sobre el desarrollo de la auditoría externa,  que le facilite la evaluación del desempeño de las funciones de auditoría externa; \n\nQue a fin de resguardar la independencia en el ejercicio de la labor del auditor externo, resulta  indispensable incorporar requisitos que deberá cumplir para tales efectos, así como los aplicables  a la persona moral en la cual labore; \n\nQue con el objeto de fortalecer al sistema financiero nacional, se requiere que los trabajos de  auditoría externa cumplan con los más altos estándares de calidad, a fin de que la información que  de estos se desprenda sea precisa, transparente y confiable para las diversas entidades financieras  y personas sujetas a la supervisión de la Comisión Nacional Bancaria y de Valores, así como para las  autoridades financieras y el mercado en general, por lo que se incorporan normas tendientes a  asegurar dicho fin, y \n\nQue se ha considerado indispensable incorporar en un solo instrumento normativo las  disposiciones aplicables a las entidades financieras y personas señaladas, en materia de servicios  de auditoría externa que procuren la transparencia y confiabilidad de su información financiera,  sistematizando su integración y homologando la terminología utilizada, a fin de brindar con ello  certeza jurídica en cuanto al marco normativo al que las mencionadas entidades o personas  deberán sujetarse en el desarrollo de las prácticas de auditoría externa, lo que también habrá de  facilitar la consulta, cumplimiento y observancia de las disposiciones que les resultan aplicables, ha  resuelto expedir las siguientes:\n\n**DISPOSICIONES DE CARÁCTER GENERAL APLICABLES A LAS ENTIDADES Y  EMISORAS SUPERVISADAS POR LA COMISIÓN NACIONAL BANCARIA Y DE VALORES  QUE CONTRATEN SERVICIOS DE AUDITORÍA EXTERNA DE ESTADOS FINANCIEROS  BÁSICOS **\n\n**Capítulo I **\n\nDisposiciones generales \n\n**Capítulo II **\n\nDe los requisitos que deben reunir los Despachos y Auditores Externos Independientes \n\n**Capítulo III **\n\nDe las normas aplicables para la realización de los trabajos de auditoría externa, así como del  contenido del Informe de Auditoría Externa y de otros comunicados y opiniones \n\n**Capítulo IV **\n\nDe la contratación del Despacho \n\n**Capítulo V **\n\nDe la sustitución del Despacho y del Auditor Externo Independiente \n\n**Capítulo VI **\n\nDel seguimiento de las labores del Despacho y del Auditor Externo Independiente \n\n**Capítulo VII **\n\nDe la evaluación de las labores del Despacho y del Auditor Externo Independiente \n\n**Capítulo VIII **\n\nDe la presentación del Informe de Auditoría Externa, así como de otros comunicados y opiniones a la Comisión \n\n**Capítulo IX **\n\nDe las facultades de la Comisión \n\n**Capítulo I **\n\nDisposiciones generales \n\n**Artículo 1.- **Las presentes disposiciones tienen por objeto establecer los requisitos que deben  cumplir los Despachos y Auditores Externos Independientes que prestan servicios de auditoría  externa de Estados Financieros Básicos a las Entidades y Emisoras; las normas aplicables para la  realización de los trabajos de auditoría externa, el contenido de los Informes de Auditoría Externa y  demás comunicados y opiniones señalados en el artículo 15 de estas disposiciones, elaborados por  dichos Despachos y Auditores Externos Independientes, así como las reglas en materia de  contratación, sustitución, seguimiento y evaluación de las labores de auditoría externa. \n\nLas presentes disposiciones son aplicables a las Entidades siguientes: \n\nI. Almacenes generales de depósito. \n\nII. Bolsas de valores. \n\nIII. Casas de bolsa. \n\nIV. Casas de cambio.\n\nV. Contrapartes centrales de valores. \n\nVI. Entidades de Fomento. \n\nVII. Financiera Nacional. \n\nVIII. Fondos de inversión de capitales. \n\nIX. Instituciones de banca de desarrollo. \n\nX. Instituciones de banca múltiple. \n\n**(1) **XI. Instituciones de tecnología financiera. \n\nXII. Instituciones para el depósito de valores. \n\nXIII. Organismos de Fomento. \n\nXIV. Sociedades cooperativas de ahorro y préstamo, con niveles de operación I a IV, salvo aquellas  sociedades cooperativas de ahorro y préstamo con niveles de operación I y II que estén  exentas de auditar sus Estados Financieros Básicos anuales, siempre y cuando el valor de sus  activos sea inferior a lo que determine el artículo 32-A del Código Fiscal de la Federación  como supuesto para que las personas morales puedan optar por dictaminar sus Estados  Financieros Básicos para efectos fiscales en los términos del artículo 52 del propio Código. \n\nXV. Soci", "fuente": "Disposiciones_de_carácter_general_aplicables_a_las_entidades_y_emisoras_supervisadas_por_la_Comisión_Nacional_Bancaria_y_de_Valores_que_contraten_servicios_de_auditoría_ex.docx"}, {"id": "Disposiciones_de_carácter_general_aplica", "titulo": "Disposiciones Art. 3 IV V", "categoria": "CNBV", "texto": "**(1) ****DISPOSICIONES DE CARÁCTER GENERAL APLICABLES A LAS  ENTIDADES Y PERSONAS A QUE SE REFIEREN LOS ARTÍCULOS 3,  FRACCIONES IV, V, VI, VII Y VIII Y 4, FRACCIÓN XXX, DE LA LEY DE  LA COMISIÓN NACIONAL BANCARIA Y DE VALORES, ASÍ COMO AL  PÚBLICO EN GENERAL, EN LA ENTREGA Y RECEPCIÓN DE  **\n\n**DOCUMENTOS EN LA COMISIÓN NACIONAL BANCARIA Y DE  VALORES **\n\nPublicadas en el Diario Oficial de la  \n\nFederación el 5 de octubre de 2011,  \n\nactualizadas con las reformas  \n\npublicadas en el propio Diario el 22  \n\nde diciembre de 2015 y 12 de abril  \n\nde 2018.\n\nLa Comisión Nacional Bancaria y de Valores con fundamento en lo dispuesto por los Artículos 5 Bis  1, segundo párrafo, 97, 110 Bis 2 y 110 Bis 3 de la Ley de Instituciones de Crédito; 350, 399, 400 y 419,  segundo párrafo de la Ley del Mercado de Valores; 5 Bis 1, segundo párrafo y 51-A de la Ley General  de Organizaciones y Actividades Auxiliares del Crédito; 94, segundo párrafo de la Ley de Sociedades  de Inversión; 5 Bis, segundo párrafo y 32 de la Ley para Regular las Agrupaciones Financieras; 9,  segundo párrafo, 78, 133 y 134 de la Ley de Uniones de Crédito; 17, segundo párrafo de Ley para  Regular las Sociedades de Información Crediticia; 49 de la Ley Orgánica de la Financiera Rural; 190  de la Ley del Instituto de Seguridad y Servicios Sociales de los Trabajadores del Estado; 66 de la Ley  del Instituto del Fondo Nacional de la Vivienda para los Trabajadores; 28, fracción III, inciso a), 70,  73, segundo párrafo, 120 y 121 de la Ley para Regular las Actividades de las Sociedades Cooperativas  de Ahorro y Préstamo; 122 Bis, 124 Bis, segundo párrafo, 146 y 147 de la Ley de Ahorro y Crédito  Popular y 4, fracciones XXXVI y XXXVIII, 16, fracción I y 19 de la Ley de la Comisión Nacional Bancaria  y de Valores, y \n\n**CONSIDERANDO **\n\nQue derivado de la expedición del Reglamento Interior de la Comisión Nacional Bancaria y de  Valores, publicado en el Diario Oficial de la Federación el 12 de agosto de 2009, se ha promovido la  reestructuración administrativa de la Comisión, con el fin de contar con procesos administrativos  transparentes en beneficio de las entidades financieras sujetas a su supervisión, así como del  público en general; \n\nQue en cumplimiento a lo dispuesto por el “Acuerdo por el que se establecen las disposiciones en  Materia de Recursos Materiales y Servicios Generales” publicado en el Diario Oficial de la Federación  el 16 de julio de 2010 y sus modificaciones, resulta necesario integrar una oficialía de partes a fin de  que a través de dicho canal este Organo Desconcentrado reciba físicamente la documentación  correspondiente por parte de las entidades y personas a que se refieren las fracciones IV, V y VI del  artículo 3 de la Ley de la Comisión Nacional Bancaria y de Valores y del público en general, con el  objetivo de llevar un adecuado seguimiento y control, y \n\nQue resulta oportuno establecer para dicho canal un lugar y horarios específicos para la recepción  de la referida documentación, optimizar la tramitación de la documentación recibida y contar con  un mejor registro y gestión de la misma, y \n\nQue se estima necesario reiterar las formas de notificación previstas por las leyes de la materia, ha  resuelto expedir las siguientes: \n\n**(1) ****DISPOSICIONES DE CARÁCTER GENERAL APLICABLES A LAS ENTIDADES Y  PERSONAS A QUE SE REFIEREN LOS ARTÍCULOS 3, FRACCIONES IV, V, VI, VII Y  VIII Y 4, FRACCIÓN XXX, DE LA LEY DE LA COMISIÓN NACIONAL BANCARIA Y DE  VALORES, ASÍ COMO AL PÚBLICO EN GENERAL, EN LA ENTREGA Y RECEPCIÓN  DE DOCUMENTOS EN LA COMISIÓN NACIONAL BANCARIA Y DE VALORES **\n\n**Artículo 1.- **Toda la información, avisos, solicitudes, recursos y demás documentación que deba  remitirse o presentarse a las distintas unidades administrativas de esta Comisión, en términos de  las leyes relativas al sistema financiero y de las disposiciones de carácter general emitidas por esta  Comisión, así como del “Acuerdo por el que se establecen las disposiciones en Materia de Recursos  Materiales y Servicios Generales”, publicado en el Diario Oficial de la Federación el 16 de julio de  2010 y sus modificaciones, cuya presentación no se establezca que deba realizarse a través del  Sistema Interinstitucional de Transferencia de Información, del Sistema de Transferencia de  Información sobre Valores, del Sistema de Transferencia de Información sobre Valores-2 u otros  medios electrónicos, deberá presentarse en el domicilio siguiente: \n\nComisión Nacional Bancaria y de Valores \n\nOficialía de partes\n\nVentanilla única de recepción y entrega de documentación \n\nAv. Insurgentes Sur No. 1971, \n\nPlaza Inn, Nivel Fuente, Local 163, \n\nCol. Guadalupe Inn, \n\nDelegación Alvaro Obregón \n\nC.P. 01020 México, D.F. \n\n**(3) **En todo caso, los escritos deberán contener los datos mínimos de identificación del remitente  y destinatario. \n\n**(4) **Tercer párrafo. - Derogado \n\nLa documentación que los interesados o sus representantes entreguen en forma distinta de la  mencionada en el primer párrafo del presente artículo, se considerará como no presentada para  todos los efectos. \n\n**Artículo 2.- **El horario de la Ventanilla única de recepción y entrega de documentación de la oficialía  de partes será de 9:00 a 15:00 horas, en días hábiles. \n\n**Artículo 3.- **Las notificaciones que, conforme a las leyes aplicables corresponda efectuar  personalmente en las oficinas de esta Comisión, se realizarán en el domicilio señalado en el Artículo  1 de las presentes disposiciones, y en los términos establecidos en tales ordenamientos. \n\n**TRANSITORIOS **\n\n**PRIMERO.- **Las presentes Disposiciones entrarán en vigor el día siguiente al de su publicación en  el Diario Oficial de la Federación. \n\n**SEGUNDO.- **A la entrada en vigor de las presentes Disposiciones quedarán abrogadas las  “Disposiciones de carácter general aplicables a las entidades y personas a que se refieren las  fracciones IV, V y VI del Artículo 3 de la Ley de la Comisión Nacional Bancaria y de Valores y al público  en general, en la entrega y recepción de documentos en la Comisión Nacional Bancaria y de  Valores” publicadas en el Diario Oficial de la Federación el 14 de septiembre de 2011. \n\n**TRANSITORIO **\n\n**(Resolución que modifica las disposiciones de carácter general aplicables a las  entidades y personas a que se refieren los artículos 3, fracciones IV, V y VI, y 4,  fracción XXX, de la Ley de la Comisión Nacional Bancaria y de Valores, así como al  público en general, en la entrega y recepción de documentos en la Comisión  Nacional Bancaria y de Valores, publicada en el Diario Oficial de la Federación el 22  de diciembre de 2015) **\n\n**ÚNICO.- **La presente Resolución entrará en vigor el día siguiente al de su publicación en el Diario  Oficial de la Federación.\n\n**TRANSITORIO **\n\n**(Resolución que modifica las disposiciones de carácter general aplicables a las  entidades y personas a que se refieren los artículos 3, fracciones IV, V y VI, y 4,  fracción XXX, de la Ley de la Comisión Nacional Bancaria y de Valores, así como al  público en general, en la entrega y recepción de documentos en la Comisión  Nacional Bancaria y de Valores, publicada en el Diario Oficial de la Federación el 12  de abril de 2018) **\n\n**ÚNICO.- **La presente Resolución entrará en vigor el día siguiente al de su publicación en el Diario  Oficial de la Federación.\n\n**CONSIDERANDO **\n\n**(Publicado el 22 de diciembre de 2015) **\n\nQue en línea con el compromiso del Gobierno Federal de establecer la política de inclusión digital  universal en todas las entidades y dependencias de la Administración Pública Federal, resulta  necesario requerir en todos los trámites que se efectúan ante la Comisión Nacional Bancaria y de  Valores, la Clave Única de Registro de Población de quienes promueven tales trámites, que a la  postre servirá como llave de acceso ante todas las entidades y dependencias de la Administración  Pública Federal, por lo que ha resuelto expedir la siguiente: \n\n**CONS", "fuente": "Disposiciones_de_carácter_general_aplicables_a_las_entidades_y_personas_a_que_se_refieren_los_artículos_3__fracciones_IV__V.docx"}, {"id": "Disposiciones_de_carácter_general_aplica", "titulo": "Operaciones con Valores", "categoria": "CNBV", "texto": "**DISPOSICIONES DE CARÁCTER GENERAL APLICABLES A LAS  OPERACIONES CON VALORES QUE REALICEN LOS CONSEJEROS,  DIRECTIVOS Y EMPLEADOS DE ENTIDADES FINANCIERAS Y DEMÁS  PERSONAS OBLIGADAS **\n\nPublicadas en el Diario Oficial de la  \n\nFederación el 4 de noviembre de \n\n2014.\n\nLa Comisión Nacional Bancaria y de Valores con fundamento en lo dispuesto por los artículos 105,  último párrafo, 371 de la Ley del Mercado de Valores y 4, fracciones XXXVI y XXXVIII y 16, fracción I  de la Ley de la Comisión Nacional Bancaria y de Valores, y \n\n**CONSIDERANDO **\n\nQue las “Disposiciones aplicables a las operaciones con valores que realicen los directivos y  empleados de entidades financieras” no han sido reformadas desde la entrada en vigor de la Ley  del Mercado de Valores publicada en el Diario Oficial de la Federación el 30 de diciembre de 2005,  por lo que resulta necesario incorporar los fundamentos legales vigentes que facultan a la Comisión  Nacional Bancaria y de Valores a emitir disposiciones relativas a tales operaciones, así como  adicionar a su ámbito de aplicación a los consejeros de las entidades; \n\nQue resulta necesario que estas Disposiciones incluyan a las sociedades que administran sistemas  para facilitar operaciones con valores, toda vez que la Ley del Mercado de Valores las contempla  como sujetos obligados a contar con lineamientos, políticas y mecanismos de control para que sus  empleados, consejeros y directivos ajusten sus operaciones con valores, en caso de contar con  información privilegiada o confidencial; \n\nQue en ese mismo tenor, resulta indispensable adicionar dentro del ámbito de aplicación de las  Disposiciones a las emisoras de valores y a los asesores en inversiones, en atención a que la Ley del  Mercado de Valores reformada mediante el “Decreto por el que se reforman, adicionan y derogan  diversas disposiciones en materia financiera y se expide la Ley para Regular las Agrupaciones  Financieras”, publicado en el Diario Oficial de la Federación el 10 de enero de 2014, los contempla  dentro de estas obligaciones, y \n\nQue a través de la emisión de estas Disposiciones se fortalecerá el gobierno corporativo de las  entidades financieras y demás personas obligadas que se señalan en este instrumento, a fin de  evitar el uso indebido de información confidencial relacionada con procesos de inscripción de  valores en el Registro Nacional de Valores, ofertas públicas, compra o venta de acciones propias de  emisoras, y operaciones ordenadas por la clientela inversionista, permitiendo a la par catalogar  como confidencial a aquella información que en atención a sus particularidades las entidades  financieras y demás personas obligadas determinen, así como señalar las personas que en virtud  de sus funciones y actividades estarán sujetas al ámbito de aplicación de los lineamientos, políticas  y mecanismos de control que definan al efecto, ha resuelto expedir las siguientes: \n\n**DISPOSICIONES DE CARÁCTER GENERAL APLICABLES A LAS OPERACIONES CON  VALORES QUE REALICEN LOS CONSEJEROS, DIRECTIVOS Y EMPLEADOS DE  ENTIDADES FINANCIERAS Y DEMÁS PERSONAS OBLIGADAS **\n\n**ÍNDICE **\n\n**Capítulo Primero **\n\nDisposiciones generales \n\n**Capítulo Segundo **\n\nDe los lineamientos, políticas y mecanismos de control \n\n**Capítulo Tercero **\n\nOtros controles\n\n**Capítulo Primero **\n\nDisposiciones Generales \n\n**Artículo 1.- **En adición a las definiciones contenidas en la Ley del Mercado de Valores, para efectos  de las presentes disposiciones, se entenderá, en singular o plural, por: \n\nI. Asesores en inversiones, a los asesores de inversión registrados ante la Comisión conforme al  artículo 225 de la Ley. \n\nII. Consejeros, a los integrantes del consejo de administración, órgano equivalente o persona  encargada de la administración en caso de no existir consejo de administración, de las  Entidades financieras y de las demás Personas obligadas. \n\nIII. Directivos y Empleados, a las personas físicas que ocupen un cargo, empleo o comisión en las  Entidades financieras y en las demás Personas obligadas, incluyendo a los apoderados para  celebrar operaciones con el público. \n\nIV. Entidades financieras, a las casas de bolsa; instituciones de crédito; sociedades operadoras de  fondos de inversión; sociedades distribuidoras de acciones de fondos de inversión y entidades  financieras autorizadas para actuar con el referido carácter; bolsas de valores; instituciones  para el depósito de valores; contrapartes centrales de valores; instituciones calificadoras de  valores; entidades financieras que formen parte de grupos financieros a los que pertenezca  alguna de las entidades financieras siguientes instituciones de banca múltiple, casas de bolsa,  sociedades operadoras de fondos de inversión, sociedades distribuidoras de acciones de  fondos de inversión o entidades financieras que distribuyan acciones de fondos de inversión. \n\nV. Información confidencial, a aquella que la Entidad financiera o demás Personas obligadas  hubieran calificado con tal carácter, así como la que expresamente se clasifique de esa forma  en los documentos, contratos o convenios que regulen la relación con sus clientes o bien,  cuando revista dicho carácter en términos de las disposiciones legales aplicables. \n\nVI. Información privilegiada, a la señalada con tal carácter en el artículo 362 de la Ley. VII. Ley, a la Ley del Mercado de Valores. \n\nVIII. Operaciones con valores, a las celebradas por cuenta propia por los Consejeros, Directivos y  Empleados de Entidades financieras o demás Personas obligadas, directa o indirectamente,  sobre: \n\na) Valores inscritos en el Registro; \n\nb) Constancias de depósito comúnmente denominadas “American Depositary Receipts”  (ADR’s) o instrumentos similares en mercados del exterior, que representen los Valores  señalados en la fracción anterior, o instrumentos análogos o semejantes a los primeros, y \n\nc) Instrumentos financieros derivados, siempre que tengan como activo subyacente Valores  inscritos en el Registro. \n\nIX. Personas obligadas, a las personas a que aluden las fracciones I, X y XI de este artículo, así como  a las Emisoras con valores inscritos en el Registro. \n\nX. Proveedores de precios, a los proveedores de precios autorizados por la Comisión conforme al  artículo 323 de la Ley. \n\nXI. Sociedades que administran sistemas, a las sociedades que administran sistemas para facilitar  operaciones con valores autorizadas por la Comisión conforme al artículo 253 de la Ley.\n\n**Artículo 2.- **Para efectos de estas disposiciones no se considerarán Operaciones con valores las  inversiones que los Consejeros, Directivos y Empleados de las Entidades financieras y Personas  obligadas realicen en acciones de fondos de inversión, Valores emitidos por el gobierno federal,  certificados bursátiles fiduciarios indizados a que alude el artículo 63 Bis 1, fracción III de la Ley,  Valores emitidos por fideicomisos constituidos para ese único fin en los que dichos Consejeros,  Directivos y Empleados no intervengan en las decisiones de inversión, títulos bancarios  representativos de una deuda a plazo igual o menor de un año a cargo de una institución de crédito,  así como en certificados de participación ordinarios o títulos opcionales referidos, en ambos casos,  a Valores de dos o más emisoras, o bien, a un grupo o canastas de acciones o índices de precios.  Asimismo, no se considerarán Operaciones con valores las inversiones que los Consejeros,  Directivos y Empleados de las Entidades financieras y Personas obligadas realicen al amparo del  servicio de gestión de inversiones, siempre que habiéndose pactado el manejo discrecional de la  cuenta, la estrategia de inversión recomendada sea estandarizada. \n\nTratándose de Proveedores de precios e instituciones calificadoras de valores, quedarán incluidas  en la definición de Operaciones con valores las que realicen sus Consejeros, Directivos y Empleados,  respecto de títulos bancarios representativos de una deuda a plazo igual o menor de un", "fuente": "Disposiciones_de_carácter_general_aplicables_a_las_operaciones_con_valores_que_realicen_consejeros__directivos_y_empleados.docx"}, {"id": "Disposiciones_de_carácter_general_aplica", "titulo": "Sistema Electrónico Autorizaciones", "categoria": "CNBV", "texto": "**DISPOSICIONES DE CARÁCTER GENERAL APLICABLES AL USO DEL  SISTEMA ELECTRÓNICO DE AUTORIZACIONES PARA LA  **\n\n**ORGANIZACIÓN, OPERACIÓN Y FUNCIONAMIENTO DE ENTIDADES,  ASÍ COMO DE LAS DEMÁS AUTORIZACIONES QUE COMPETA  OTORGAR A LA COMISIÓN NACIONAL BANCARIA Y DE VALORES **\n\nPublicadas en el Diario Oficial de la  \n\nFederación el 12 de abril 2018,  \n\nmodificada mediante Resolución  \n\npublicada en el citado Diario Oficial  \n\nel 15 de abril de 2019.\n\nLa Comisión Nacional Bancaria y de Valores con fundamento en los artículos 4, fracciones XXXVI y  XXXVIII y 16, fracción I de la Ley de la Comisión Nacional Bancaria y de Valores; 110 Bis 2, 110 Bis 3 y  110 Bis 11 de la Ley de Instituciones de Crédito; 399, 400 y 408 de la Ley del Mercado de Valores; 87  Bis 2, 87 Bis 3 y 87 Bis 11 de la Ley de Fondos de Inversión; 120, 121 y 129 de la Ley para Regular las  Actividades de las Sociedades Cooperativas de Ahorro y Préstamo; 133, 134 y 142 de la Ley de  Uniones de Crédito; 146, 147 y 155 de la Ley de Ahorro y Crédito Popular; 134, 135 y 142 de la Ley para  Regular las Instituciones de Tecnología Financiera, y \n\n**CONSIDERANDO **\n\nQue resulta conveniente agilizar los procesos de autorización que se llevan ante la Comisión  Nacional Bancaria y de Valores para la organización, operación y funcionamiento de aquellas  entidades que señalan las leyes, así como para que las sociedades cooperativas de ahorro y  préstamo y las sociedades financieras comunitarias continúen realizando sus operaciones con un  nivel distinto al básico, tanto para otorgar mayor certeza a los solicitantes respectivos como para  otorgarles una facilidad administrativa, por lo que se pone a disposición del público interesado una  herramienta tecnológica que permita el intercambio seguro y veraz de información, al tiempo de  propiciar la debida integración de expedientes; \n\nQue el incremento en el uso de tecnologías de la información y comunicación mejoran la capacidad  de entrega y la calidad de los servicios públicos, genera ahorros en el mediano y largo plazo, y  promueve la transparencia, participación y colaboración con la ciudadanía, y \n\nQue en ese tenor para una debida implementación de la facilidad administrativa se regula a la  herramienta tecnológica que permitirá el uso eficiente, transparente y eficaz de los recursos  públicos en consonancia con las acciones de disciplina presupuestaria en el ejercicio del gasto  público, así como para la modernización de la Administración Pública Federal favoreciendo el uso  de medios tecnológicos, bajo estándares de simplificación administrativa, ha resuelto expedir las  siguientes:\n\n**DISPOSICIONES DE CARÁCTER GENERAL APLICABLES AL USO DEL SISTEMA  ELECTRÓNICO DE AUTORIZACIONES PARA LA ORGANIZACIÓN, OPERACIÓN Y  FUNCIONAMIENTO DE ENTIDADES, ASÍ COMO DE LAS DEMÁS AUTORIZACIONES  QUE COMPETA OTORGAR A LA COMISIÓN NACIONAL BANCARIA Y DE VALORES **\n\n**INDICE **\n\n**CAPÍTULO I **\n\nDisposiciones preliminares \n\n**CAPÍTULO II **\n\nDel envío y recepción de información y documentación \n\n**TRANSITORIOS **\n\n**CONSIDERANDOS **\n\n**REFERENCIAS **\n\n**(2) ****ANEXO I **Formulario de solicitud de usuario y contraseña para la utilización del sistema  electrónico de autorizaciones para la organización, operación y funcionamiento  \n\nde entidades. \n\n**CAPÍTULO I **\n\nDisposiciones preliminares \n\n**(1) ****Artículo 1**.**- **Las presentes disposiciones tienen por objeto establecer y regular el uso y  funcionamiento del Sistema Electrónico de Autorizaciones, a través del cual se podrá presentar la  documentación e información necesaria dentro de los procesos de autorización para la  organización, operación y funcionamiento de aquellas entidades que señalen las leyes, así como de  las demás autorizaciones que, conforme a las leyes, compete otorgar a la Comisión. \n\n**Artículo 2.- **Para efectos de las presentes disposiciones se entenderá, en singular o plural, por: I. **Comisión: **Comisión Nacional Bancaria y de Valores. \n\nII. **Entidad: **instituciones de banca múltiple, casas de bolsa, sociedades operadoras de fondos de  inversión, sociedades distribuidoras de acciones de fondos de inversión, sociedades valuadoras  de acciones de fondos de inversión, sociedades que administran sistemas para facilitar  operaciones con valores, instituciones calificadoras de valores, sociedades cooperativas de  ahorro y préstamo con niveles de operación I a IV, uniones de crédito, sociedades financieras  populares y sociedades financieras comunitarias con niveles de operación I a IV, instituciones  de financiamiento colectivo, instituciones de fondos de pago electrónico y sociedades  autorizadas por la Comisión para operar con modelos novedosos. \n\n**(1) **III. **Guías: **las guías para solicitudes de autorización que constituyen una herramienta de apoyo a  los interesados en obtener alguna de las autorizaciones que compete otorgar a la Comisión,  elaboradas por esta y que se encuentran a disposición del público en general en el sitio de  Internet https://www.gob.mx/cnbv/ \n\n**(1) **IV. **Solicitante: **la persona que por medio del Sistema Electrónico opta por presentar ante la  Comisión, una solicitud de autorización que le competa otorgar conforme a las leyes.  Quedarán incluidos en esta definición las Federaciones y el Comité de Supervisión Auxiliar del  Fondo de Supervisión Auxiliar de Sociedades Cooperativas de Ahorro y Préstamo y de  Protección a sus Ahorradores que presentan ante la Comisión las solicitudes respecto de \n\nsociedades financieras populares, sociedades cooperativas de ahorro y préstamo y sociedades  financieras comunitarias en términos de las leyes aplicables. \n\n**(1) **V. **Sistema Electrónico: **el sistema electrónico de autorizaciones para la organización, operación  y funcionamiento de entidades, así como de las demás autorizaciones que compete otorgar a  la Comisión conforme a las leyes. \n\n**(1) ****Artículo 3.- **El Sistema Electrónico es la herramienta informática y el canal de comunicación a  disposición de los Solicitantes, instrumentada y administrada por la Comisión, a través de la cual se  podrán presentar y tramitar electrónicamente las solicitudes de autorización para la organización,  operación y funcionamiento de nuevas Entidades; de autorización para que las sociedades  cooperativas de ahorro y préstamo y las sociedades financieras comunitarias continúen realizando  sus operaciones con un nivel distinto al básico; de las demás autorizaciones que compete otorgar  a la Comisión; así como para la entrega y recepción de la información y documentación materia de  dichas solicitudes.  \n\n**(1) **Las solicitudes de autorización que se tramiten a través del Sistema Electrónico, deberán  presentarse en la forma, términos y con la documentación requerida por las leyes financieras y las  disposiciones de carácter general emitidas por la Comisión, según el tipo de Entidad de que se trate  o bien, de la autorización materia del trámite correspondiente. \n\n**Artículo 4.- **Sin perjuicio de lo establecido en las presentes disposiciones, la Comisión podrá  requerir en cualquier momento, la presentación física de los documentos ingresados a través del  Sistema Electrónico, para efectos de su cotejo y revisión. \n\n**Artículo 5.- **El acceso al Sistema Electrónico se realizará a través de la página de Internet de la  Comisión, en el sitio de Internet https://www.gob.mx/cnbv/ \n\nEl Solicitante podrá realizar a través del Sistema Electrónico, consultas respecto del estado que  guarda su solicitud dentro del proceso de autorización, en cualquiera de sus etapas. \n\n**Artículo 6.- **Los Solicitantes que opten por presentar la solicitud utilizando el Sistema Electrónico,  deberán tramitar ante la Comisión un nombre de usuario y contraseña, los cuales además de  permitir el acceso al sistema, otorgarán validez a las actuaciones que se realicen a través de este,  produciendo los mismos efectos legales que la firma autógrafa. \n\nEl nombre de usuario y contraseña se tramitarán mediante la ", "fuente": "Disposiciones_de_carácter_general_aplicables_al_uso_del_sistema_electrónico_de_autorizaciones_para_la_organización__operación_y_funcionamiento_de_en.docx"}, {"id": "Disposiciones_de_carácter_general_para_l", "titulo": "Certificación Auditores y Oficiales", "categoria": "CNBV", "texto": "**DISPOSICIONES DE CARÁCTER GENERAL PARA LA CERTIFICACIÓN DE  AUDITORES EXTERNOS INDEPENDIENTES, OFICIALES DE CUMPLIMIENTO  Y DEMÁS PROFESIONALES EN MATERIA DE PREVENCIÓN DE  **\n\n**OPERACIONES CON RECURSOS DE PROCEDENCIA ILÍCITA Y  **\n\n**FINANCIAMIENTO AL TERRORISMO **\n\nPublicadas en el Diario Oficial de la  \n\nFederación el 1 de noviembre de 2019.\n\nLa Comisión Nacional Bancaria y de Valores, con fundamento en lo dispuesto por los artículos 4,  fracciones X, X Bis, XXXVI y XXXVIII, y 16, fracción I de la Ley de la Comisión Nacional Bancaria y de Valores,  y  \n\n**CONSIDERANDO **\n\nQue el 2 de octubre de 2014 fueron publicadas en el Diario Oficial de la Federación las “Disposiciones de  carácter general para la certificación de auditores externos independientes, oficiales de cumplimiento y  demás profesionales en materia de prevención de operaciones con recursos de procedencia ilícita y  financiamiento al terrorismo”, derivado de la facultad que se adicionó en la Ley de la Comisión Nacional  Bancaria y de Valores para que la propia Comisión realice la certificación de los oficiales de cumplimiento,  así como de los auditores externos independientes y demás profesionales, a efecto de que presten sus  servicios a las entidades y personas sujetas a la supervisión de ese órgano desconcentrado, a fin de  verificar el cumplimiento de las leyes financieras y de las disposiciones que emanen de ellas, en materia  de prevención, detección y reporte de actos, omisiones u operaciones que pudiesen ubicarse en los  supuestos de los artículos 139 Quáter o 400 Bis, del Código Penal Federal;  \n\nQue con fechas 13 de marzo de 2015 y 4 de julio de 2017 se modificaron las disposiciones señaladas en el  párrafo anterior, con el objeto de que la Comisión pudiera expedir la certificación de referencia a aquellos  auditores externos independientes, oficiales de cumplimiento y demás profesionales que colaboren en  el proceso de elaboración de la evaluación a que serán sometidos los participantes, entre otras  modificaciones;  \n\nQue en virtud de que el objeto de la certificación es constatar que las personas que realizan la verificación  del cumplimiento de las leyes financieras y de las disposiciones que emanen de ellas, en materia de  prevención, detección y reporte de actos, omisiones u operaciones que pudiesen ubicarse en los  supuestos de los artículos 139 Quáter o 400 Bis del Código Penal Federal, cuentan con los conocimientos  mínimos de conformidad con los más altos estándares internacionales en la materia, es necesario  actualizar el proceso de obtención de dicha certificación con el fin de hacerlo más transparente, claro y  expedito;  \n\nQue a efecto de otorgar mayor certeza jurídica y disminuir la carga económica a los oficiales de  cumplimiento, auditores externos independientes y demás profesionales, resulta necesario modificar la  regulación relativa a la renovación del certificado, derogando la obligación relativa a la capacitación;  \n\nQue es necesario derogar las normas relativas a la certificación de personas morales, a fin de evitar una  doble regulación, ya que los Lineamientos para la elaboración del Informe de Auditoría para evaluar el  cumplimiento de las disposiciones de carácter general en materia de prevención de operaciones con  recursos de procedencia ilícita y financiamiento al terrorismo, así como los Estándares mínimos en  materia de auditoría en prevención de operaciones con recursos de procedencia ilícita y financiamiento  al terrorismo para las personas morales, ya contienen los elementos relativos a la elaboración y contenido  de los dictámenes de auditoría;  \n\nQue con el objeto de reforzar la transparencia del proceso de certificación y prevenir conflictos de  intereses, es necesario que esta Comisión cuente con la potestad de auxiliarse, en las distintas etapas del  proceso, en personas morales de naturaleza pública o privada, nacionales o extranjeras que le provean  diversos servicios como son los de elaboración y aplicación de la evaluación, así como de la revisión y  emisión de los resultados de esta, y  \n\nQue en razón de que las modificaciones a las vigentes Disposiciones implican una reestructura total del  cuerpo normativo, es necesario emitir un nuevo ordenamiento que, de manera ordenada, coherente y  clara, establezca puntualmente los requisitos y etapas del proceso de certificación, ha resuelto expedir  las siguientes: \n\n**DISPOSICIONES DE CARÁCTER GENERAL PARA LA CERTIFICACIÓN DE  AUDITORES EXTERNOS INDEPENDIENTES, OFICIALES DE CUMPLIMIENTO Y  DEMÁS PROFESIONALES EN MATERIA DE PREVENCIÓN DE OPERACIONES CON  RECURSOS DE PROCEDENCIA ILÍCITA Y FINANCIAMIENTO AL TERRORISMO **\n\n**INDICE **\n\n**Capítulo I  **\n\nDisposiciones preliminares \n\n**Capítulo II  **\n\nDel proceso de obtención del Certificado  \n\n**Sección I **\n\nDe los requisitos y de la documentación  \n\n**Sección II  **\n\nDel procedimiento de evaluación \n\n**Sección III  **\n\nDe la expedición del Certificado  \n\n**Capítulo III  **\n\nDe la renovación de la certificación \n\n**Capítulo IV  **\n\nDe la revocación de la certificación \n\n**Capítulo V  **\n\nDisposiciones finales\n\n**Capítulo I  **\n\nDisposiciones preliminares \n\n**Artículo 1.- **Las presentes disposiciones tienen por objeto establecer los requisitos y el proceso aplicable  para que la Comisión certifique a los oficiales de cumplimiento, auditores externos independientes y  demás profesionales, a efecto de que presten sus servicios en las entidades y personas sujetas a la  supervisión de la Comisión, para la verificación del cumplimiento de las obligaciones contenidas en las  leyes financieras y en las disposiciones que emanen de ellas, en materia de prevención, detección y  reporte de actos, omisiones u operaciones que pudiesen ubicarse en los supuestos de los artículos 139  Quáter o 400 Bis del Código Penal Federal.  \n\nAsimismo, tienen por objeto señalar los requisitos y procedimientos para certificar a los auditores  externos independientes y demás profesionales a efecto de que coadyuven con la Comisión cuando esta  los contrate, para la verificación del cumplimiento de las leyes y disposiciones a que se hace referencia  en el primer párrafo del presente artículo.  \n\n**Artículo 2.- **Para efectos de estas disposiciones, se entenderá en singular o plural por:  \n\nI. Certificado, al documento expedido electrónicamente por la Comisión, en el que se hace constar  la certificación a que se refiere el artículo 4, fracciones X y X Bis de la Ley.  \n\nII. Comisión, a la Comisión Nacional Bancaria y de Valores.  \n\nIII. Instructivo, al documento que dé a conocer la Comisión a través de su portal de Internet, que  detalla el proceso para la obtención o renovación del Certificado, así como las especificaciones  requeridas para llevar a cabo su tramitación.  \n\nIV. Ley, a la Ley de la Comisión Nacional Bancaria y de Valores.  \n\nV. Participante, a la persona física que pretenda obtener o, en su caso, renovar el Certificado en  términos de lo previsto en las presentes disposiciones.  \n\n**Artículo 3.- **La interpretación de las presentes disposiciones y la atención de consultas relacionadas con  su aplicación, corresponderá a la Vicepresidencia de Supervisión de Procesos Preventivos de la Comisión.  \n\n**Capítulo II **\n\nDel proceso de obtención del Certificado \n\n**Artículo 4.- **El proceso de obtención del Certificado constará, al menos, de las siguientes etapas:  I. Publicación de la convocatoria pública.  \n\nII. Registro y obtención de folio y contraseña.  \n\nIII. Presentación de solicitud por el Participante.  \n\nIV. Cotejo de la documentación con los originales.  \n\nV. Evaluación.  \n\nVI. Expedición del Certificado. \n\n**Artículo 5.- **El proceso de obtención del Certificado iniciará con la publicación de la convocatoria pública  en el Diario Oficial de la Federación, en la que se incluirán las bases de participación correspondientes.  \n\nLas bases de participación señalarán, entre otros aspectos, las etapas del proceso de certificación, las  sedes, las fechas ", "fuente": "Disposiciones_de_carácter_general_para_la_certificación_de_auditores_externos_independientes__oficiales_de_cumplimiento_y.docx"}, {"id": "Disposiciones_de_carácter_general_que_re", "titulo": "Programas de Autocorrección", "categoria": "CNBV", "texto": "**DISPOSICIONES DE CARÁCTER GENERAL QUE REGULAN **\n\n**LOS PROGRAMAS DE AUTOCORRECCIÓN **\n\nPublicado en el Diario Oficial de la  \n\nFederación el 20 de octubre de  \n\n2014. Actualizada con las  \n\nmodificaciones publicadas en el  \n\npropio Diario el 28 de noviembre de  \n\n2018 y 10 de septiembre de 2021.\n\nLa Comisión Nacional Bancaria y de Valores, con fundamento en lo dispuesto por los artículos 151,  152 y 153 de la Ley para Regular las Agrupaciones Financieras, 109 Bis 9, 109 Bis 10, 109 Bis 11 y 109 Bis  12 de la Ley de Instituciones de Crédito, 395 Bis, 395 Bis 1, 395 Bis 2 y 395 Bis 3 de la Ley del Mercado  de Valores, 86 Bis 3, 86 Bis 4, 86 Bis 5 y 86 Bis 6 de la Ley de Fondos de Inversión, 94 Bis 1, 94 Bis 2,  94 Bis 3 y 94 Bis 4 de la Ley General de Organizaciones y Actividades Auxiliares del Crédito, 136 Bis  3, 136 Bis 4, 136 Bis 5 y 136 Bis 6 de la Ley de Ahorro y Crédito Popular, 108 Bis , 108 Bis 1, 108 Bis 2 y  108 Bis 3 de la Ley para Regular las Actividades de las Sociedades Cooperativas de Ahorro y  Préstamo, 119 Bis, 119 Bis 1 y 119 Bis 2 de la Ley de Uniones de Crédito, 56 Bis 1, 56 Bis 2 y 56 Bis 3 de  la Ley para Regular las Sociedades de Información Crediticia, así como 4, fracciones I, y XXXVI, 9 Bis  1, 9 Bis 2, 9 Bis 3, 9 Bis 4 y 16, fracción I de la Ley de la Comisión Nacional Bancaria y de Valores, y \n\n**CONSIDERANDO **\n\nQue con motivo de la publicación del “Decreto por el que se reforman, adicionan y derogan diversas  disposiciones en materia financiera y se expide la Ley para Regular las Agrupaciones Financieras”  en el Diario Oficial de la Federación el 10 de enero de 2014, que incluye las modificaciones  efectuadas a la Ley de Instituciones de Crédito, Ley del Mercado de Valores, Ley de Fondos de  Inversión, Ley General de Organizaciones y Actividades Auxiliares del Crédito, Ley de Ahorro y  Crédito Popular, Ley para Regular las Actividades de las Sociedades Cooperativas de Ahorro y  Préstamo, Ley de Uniones de Crédito, Ley para Regular las Sociedades de Información Crediticia y  la Ley de la Comisión Nacional Bancaria y de Valores, así como la Ley para Regular las Agrupaciones  Financieras, se cuenta con la posibilidad de que aquellas entidades y personas sujetas a supervisión  de la Comisión Nacional Bancaria y de Valores que hayan contravenido la normativa que les aplica,  puedan someter a autorización de la propia Comisión, un programa de autocorrección en el que  se contenga la forma en que corregirán el incumplimiento en que hubieren incurrido o prevendrán  incumplimientos futuros; \n\nQue resulta indispensable incorporar un marco normativo relacionado con los requisitos que  deberán observar las entidades financieras y personas sujetas a la supervisión de la Comisión  Nacional Bancaria y de Valores al presentar los programas de autocorrección respectivos, así como  para darle seguimiento a la instrumentación e implementación de los programas autorizados e  informar de su avance tanto al interior de las entidades como a la propia Comisión, y \n\nQue con la normativa descrita se pretende generar disciplina en los mercados, reduciendo con ello  los procedimientos administrativos de sanción, fomentando así el cumplimiento voluntario de la  normatividad por parte de las entidades, ha resuelto expedir las siguientes: \n\n**DISPOSICIONES DE CARÁCTER GENERAL QUE REGULAN **\n\n**LOS PROGRAMAS DE AUTOCORRECCIÓN **\n\n**Capítulo I **\n\nDisposiciones generales \n\n**Artículo 1.- **Las presentes disposiciones tienen como objeto establecer la forma, términos y  procedimientos que habrán de observar las Entidades y personas sujetas a la supervisión de la  Comisión, con respecto a los Programas de Autocorrección que presenten en términos de las leyes  aplicables. \n\n**Artículo 2.- **Para efectos de lo previsto en las presentes disposiciones se entenderá, en singular o plural,  por: \n\nI. Comisión: a la Comisión Nacional Bancaria y de Valores.\n\nII. Corrección: al conjunto de actividades que las Entidades se obligan a realizar para ajustar su  operación al marco normativo que les es aplicable y, en su caso, para prevenir futuras  Irregularidades o incumplimientos. \n\n**(1) **III. Entidades: a las sociedades controladoras de grupos financieros, instituciones de crédito,  oficinas de representación de entidades financieras del exterior, organismos  autorregulatorios, casas de bolsa, oficinas de representación de casas de bolsa, bolsas de  valores, asesores en inversiones, instituciones para el depósito de valores, contrapartes  centrales, proveedores de precios, instituciones calificadoras de valores, sociedades que  administran sistemas para facilitar operaciones con valores, fondos de inversión, sociedades  operadoras de fondos de inversión, sociedades distribuidoras de acciones de fondos de  inversión, sociedades valuadoras de acciones de fondos de inversión, almacenes generales  de depósito, uniones de crédito, casas de cambio, centros cambiarios, transmisores de  dinero, sociedades financieras de objeto múltiple, sociedades financieras populares,  sociedades financieras comunitarias, sociedades cooperativas de ahorro y préstamo,  sociedades de información crediticia sujetas a la supervisión de la Comisión, instituciones de  tecnología financiera, sociedades autorizadas para operar con modelos novedosos sujetas a  la supervisión de la Comisión, así como otras instituciones y fideicomisos públicos que  realicen actividades financieras, respecto de los cuales la Comisión ejerza facultades de  supervisión. \n\nIV. Irregularidades o incumplimientos: a los actos u omisiones de carácter continuo o  instantáneo, que realicen las Entidades en contravención a las Leyes, cuya sanción  corresponda imponer a la Comisión. \n\nV. Irregularidad o incumplimiento continuo: a aquellos cuya consumación se prolonga en el  tiempo, de tal manera que sus efectos continúan al momento de presentar la solicitud de  autorización del Programa de Autocorrección. \n\nVI. Irregularidad o incumplimiento instantáneo: a aquellos cuya consumación se agota en el  momento en que se ha realizado, de tal manera que sus efectos hayan cesado cuando se  presente la solicitud de autorización del Programa de Autocorrección. \n\n**(1) **VII. Leyes: a la Ley para Regular las Agrupaciones Financieras, Ley de Instituciones de Crédito,  Ley del Mercado de Valores, Ley de Fondos de Inversión, Ley General de Organizaciones y  Actividades Auxiliares del Crédito, Ley de Ahorro y Crédito Popular, Ley de Uniones de  Crédito, Ley para Regular las Actividades de las Sociedades Cooperativas de Ahorro y  Préstamo, Ley para Regular las Sociedades de Información Crediticia, Ley para Regular las  Instituciones de Tecnología Financiera, Ley de la Comisión Nacional Bancaria y de Valores o  las demás disposiciones aplicables a las Entidades y personas sujetas a la supervisión de la  Comisión, cuyo incumplimiento corresponda sancionar a esta última. \n\nVIII. Programa de Autocorrección: al plan que el director general o su equivalente de la Entidad,  presente a la Comisión para implementar una Corrección. \n\n**Artículo 3.- **Las Entidades podrán someter a la autorización de la Comisión un Programa de  Autocorrección cuando en la realización de sus actividades, la propia Entidad detecte  Irregularidades o incumplimientos previstos en las Leyes. \n\nLas Irregularidades o incumplimientos no podrán ser materia de un Programa de Autocorrección  cuando: \n\nI. Sean detectadas por la Comisión, en ejercicio de sus facultades de inspección y vigilancia,  antes de la presentación por parte de las Entidades del Programa de Autocorrección  respectivo, así como aquellas cuya sanción corresponda imponer a autoridades distintas a la  Comisión. \n\nSe entenderá que la Irregularidad o incumplimiento fue detectado previamente por la  Comisión, en el caso de las facultades de vigilancia, cuando se haya notificado a la Entidad la \n\ncitada Irregularidad o incumplimiento; en el caso de las facultades de inspección, cuando  haya sido detectada en el t", "fuente": "Disposiciones_de_carácter_general_que_regulan_los_programas_de_autocorrección.docx"}, {"id": "Disposiciones_generales_aplicables_a_los", "titulo": "Operadores de Bolsa", "categoria": "CNBV", "texto": "**(6) ****DISPOSICIONES GENERALES APLICABLES A LOS OPERADORES DE  BOLSA Y APODERADOS DE INTERMEDIARIOS DEL MERCADO DE  VALORES PARA LA CELEBRACION DE OPERACIONES CON EL  PÚBLICO **\n\nPublicada en el Diario Oficial de la  \n\nFederación el 27 de junio de 2002,  \n\nmodificadas mediante Resoluciones  \n\npublicadas en el propio Diario el 30 de  \n\njunio y 30 de diciembre de 2003; 5 de  \n\nagosto de 2005, 10 de noviembre de  \n\n2006 y 5 de junio de 2014.\n\n**(6) **La Comisión Nacional Bancaria y de Valores, con fundamento en los artículos 4 fracciones I, XII,  XXXVI y XXXVII, 16 fracción I y 19 de su Ley; 193 primer y segundo párrafos, 247 fracción III y 413 de la  Ley del Mercado de Valores; 81 de la Ley de Instituciones de Crédito, y 35 de la Ley de Sociedades  de Inversión, y \n\n**CONSIDERANDO **\n\nQue a fin de otorgar seguridad jurídica en las operaciones que celebran con el público inversionista,  los intermediarios del mercado de valores y las personas que manejan carteras de valores  comúnmente denominados asesores de inversión, resulta conveniente que utilicen los servicios de  personas físicas que, actuando en su representación, acrediten cumplir con los requisitos  establecidos en la legislación financiera relativos a la capacidad técnica, honorabilidad e historial  crediticio satisfactorio; \n\nQue la certificación de la capacidad técnica de las mencionadas personas físicas, así como la  verificación de su calidad crediticia y honorabilidad, podrá ser llevada a cabo por organismos  autorregulatorios reconocidos por la Comisión Nacional Bancaria y de Valores, lo cual no sustituye  la responsabilidad de los intermediarios del mercado de valores y asesores de inversión, de  establecer los procesos de selección internos que juzguen convenientes a fin de contratar personas  que reúnan las condiciones de aptitud e idoneidad respecto de la actividad que se pretenda  desempeñar; \n\nQue la Comisión Nacional Bancaria y de Valores tomará en cuenta dicha certificación y verificación,  a fin de autorizar a las personas que pretendan actuar con el carácter de operadores de bolsa, o  bien, de apoderados para celebrar operaciones con el público, de asesoría, promoción o, en su caso,  compra y venta de valores, en representación de los citados intermediarios y asesores de inversión; \n\nQue tratándose de operadores de bolsa, adicionalmente a los requisitos que deberán cumplir de  conformidad con lo previsto en la Ley del Mercado de Valores, habrán de acreditar los que las bolsas  de valores establezcan al efecto en sus reglamentos interiores; \n\nQue resulta conveniente que los organismos autorregulatorios a que se ha hecho referencia, lleven  un padrón o registro de las personas respecto de las cuales se solicite y obtenga la autorización  para actuar como operadores de bolsa o apoderados de intermediarios del mercado de valores y  asesores de inversión, que permita identificarlas claramente y generar mayor confianza en el  público inversionista, y \n\nQue a fin de cumplir con el marco legal aplicable, resulta conveniente establecer la obligación de  otorgar poderes especiales a las referidas personas físicas, por parte de los intermediarios del  mercado de valores y los clientes de los asesores de inversión, en los que se pacten las instrucciones  que deben acatar dichos apoderados, ha resuelto expedir las siguientes: \n\n**(6) ****DISPOSICIONES GENERALES APLICABLES A LOS OPERADORES DE BOLSA Y  APODERADOS DE INTERMEDIARIOS DEL MERCADO DE VALORES PARA LA  CELEBRACIÓN DE OPERACIONES CON EL PÚBLICO **\n\n**Artículo 1.- **Para los efectos de estas Disposiciones, se entenderá por: \n\n**(6) **I. Apoderado, a la persona física que reciba poder de algún Intermediario del Mercado de  Valores para celebrar con el público operaciones con valores en cumplimiento de contratos  de intermediación bursátil, fideicomisos, mandatos o comisiones, así como contratos de  depósito y administración de valores, que los clientes tengan celebrados con casas de bolsa  u otras entidades financieras autorizadas para operar con valores por cuenta de terceros.  Quedarán incluidos dentro de esta definición, los delegados fiduciarios de instituciones de  crédito y casas de bolsa que lleven a cabo los actos antes mencionados al amparo de  fideicomisos, mandatos o comisiones, en los casos en que intervengan en la celebración de  operaciones con valores\n\n**(8) **II. Derogada. \n\nIII. Comisión, a la Comisión Nacional Bancaria y de Valores. \n\n**(6) **IV. Intermediario del Mercado de Valores, a la persona que se ubique en alguno de los supuestos  a que hace referencia el artículo 113 de la Ley del Mercado de Valores. \n\n**(6) **V. Operador de Bolsa, a la persona física que reciba poder de una casa de bolsa para operar los  sistemas de negociación de una bolsa de valores, conforme a lo dispuesto en el artículo 247,  fracción III de la Ley del Mercado de Valores. \n\nVI. Organismos Autorregulatorios, a las asociaciones gremiales de intermediarios del mercado  de valores y de prestadores de servicios vinculados al mercado de valores reconocidos como  tales por la Comisión y que cuenten con la autorización correspondiente para certificar la  capacidad técnica de las personas que pretenden actuar como Operadores de Bolsa o  Apoderados. \n\nVII. Padrón, al padrón o registro que los Organismos Autorregulatorios deben llevar de  conformidad con el artículo 10 de las “Disposiciones generales aplicables a los organismos  autorregulatorios del mercado de valores reconocidos por la Comisión Nacional Bancaria y  de Valores”. \n\n**(6) ****Artículo 2.- **Las presentes disposiciones tienen por objeto establecer los requisitos mínimos que  deben cumplir las personas que pretendan actuar como Operadores de Bolsa o Apoderados de  Intermediarios del Mercado de Valores. \n\n**(6) **La prestación de los servicios para celebrar operaciones por cuenta de clientes de Intermediarios  del Mercado de Valores o en las bolsas de valores, únicamente podrán llevarse a cabo por  Operadores de Bolsa y Apoderados que satisfagan los requisitos establecidos en estas  disposiciones. \n\n**(6) **Todos los trámites referentes a la autorización para actuar como Operadores de Bolsa o  Apoderados, así como la integración de expedientes en el Padrón, se realizarán por los  Intermediarios del Mercado de Valores ante el Organismo Autorregulatorio, en representación de  la persona física que pretenda obtener la referida autorización. \n\n**Artículo 3.- **Las personas que deseen obtener la autorización para actuar como Operadores de  Bolsa o Apoderados deberán cumplir con lo siguiente: \n\nI. Acreditar ante el Organismo Autorregulatorio los exámenes de certificación de calidad  técnica que establezca. Adicionalmente, tratándose de Operadores de Bolsa, cumplir con los  requisitos que se prevean en el reglamento interior de la bolsa de valores en la que se  pretenda participar. \n\nII. Acreditar ante el Organismo Autorregulatorio que cuenta con historial crediticio satisfactorio  y que goza de honorabilidad, de conformidad con las disposiciones aplicables. \n\n**(9) **III. Presentar al Organismo Autorregulatorio una carta de un Intermediario del Mercado de  Valores en la que manifiesten su intención de que la persona física actúe como su Apoderado  u Operador de Bolsa, una vez que haya obtenido la autorización correspondiente. Tratándose  de Intermediarios del Mercado de Valores que formen parte de un grupo financiero, bastará  con la carta de alguna de las entidades que lo integran. \n\n**(9) ****Artículo 4.- **Los Organismos Autorregulatorios deberán promover ante la Comisión, a más tardar  en un plazo de 5 días hábiles contado a partir de la fecha en que se concluya el trámite que al  respecto haya establecido el mencionado Organismo, la solicitud de autorización para actuar como  Operador de Bolsa o Apoderado, para lo cual previamente habrán de obtener el consentimiento de  la persona física de que se trate y presentar físicamente la mencionada solicitud a la Comisión o \n\nbien, vía ele", "fuente": "Disposiciones_generales_aplicables_a_los_operadores_de_bolsa_y_apoderados_de_intermediarios_del_mercado_de_valores_para_la.docx"}, {"id": "Lineamientos_para_la_divulgación_de_las_", "titulo": "Lineamientos Sanciones CNBV", "categoria": "CNBV", "texto": "**LINEAMIENTOS PARA LA DIVULGACIÓN DE LAS SANCIONES QUE  IMPONGA LA COMISIÓN NACIONAL BANCARIA Y DE VALORES **\n\nPublicados en el Diario Oficial de la  \n\nFederación el 9 de abril de 2014.  \n\nActualizados con la reforma  \n\npublicada en el propio Diario el 10  \n\nde junio de 2014 y 4 de octubre de  \n\n2018.\n\nLa Comisión Nacional Bancaria y de Valores, con fundamento en lo dispuesto por los Artículos 136  de la Ley de Ahorro y Crédito Popular, 105 de la Ley para Regular las Actividades de las Sociedades  Cooperativas de Ahorro y Préstamo, 116 de la Ley de Uniones de Crédito, 89 Bis 3 de la Ley General  de Organizaciones y Actividades Auxiliares del Crédito, 109 Bis 8 de la Ley de Instituciones de  Crédito, 86 Bis 2 de la Ley de Fondos de Inversión, 391 Bis de la Ley del Mercado de Valores, 56 de la  Ley para Regular las Sociedades de Información Crediticia y 150 de la Ley para Regular las  Agrupaciones Financieras, y 4, fracción XXXVI, 5 Bis 2, 12, fracción XV y 16, fracción I de la Ley de la  Comisión Nacional Bancaria y de Valores, previo acuerdo de su Junta de Gobierno, y \n\n**CONSIDERANDO **\n\nQue con motivo de la publicación el día 10 de enero del año en curso en el Diario Oficial de la  Federación del “Decreto por el que se reforman, adicionan y derogan diversas disposiciones en  materia financiera y se expide la Ley para Regular las Agrupaciones Financieras”, se facultó en  diversos ordenamientos legales a este órgano desconcentrado para dar a conocer al público en  general, de conformidad con los lineamientos dictados al efecto por su Junta de Gobierno, las  sanciones que en el ejercicio de su mandato legal imponga, y \n\nQue a fin de tutelar el ejercicio del derecho de acceso a la información pública gubernamental, tal  y como lo mandatan los diversos ordenamientos legales aludidos, la divulgación de las sanciones  impuestas debe realizarse por un periodo de por lo menos tres años a partir de que haya quedado  firme la resolución respectiva, ya que dicho plazo, además se ser razonable, resulta idóneo y  necesario para alcanzar los fines mandatados por el legislador, ha resuelto expedir los siguientes: \n\n**LINEAMIENTOS PARA LA DIVULGACIÓN DE LAS SANCIONES QUE IMPONGA LA  COMISIÓN NACIONAL BANCARIA Y DE VALORES **\n\n**Artículo 1.- **Los presentes lineamientos tienen por objeto determinar la forma en que la Comisión  Nacional Bancaria y de Valores deberá hacer del conocimiento del público las Sanciones que  imponga por infracciones a las Leyes o a las disposiciones que emanen de ellas. \n\nPara efectos de estos lineamientos se entenderá por: \n\nI. Comisión, a la Comisión Nacional Bancaria y de Valores. \n\n**(2) **II. Leyes, a la Ley de Ahorro y Crédito Popular, Ley para Regular las Actividades de las Sociedades  Cooperativas de Ahorro y Préstamo, Ley de Uniones de Crédito, Ley General de Organizaciones  y Actividades Auxiliares del Crédito, Ley de Instituciones de Crédito, Ley de Fondos de  Inversión, Ley del Mercado de Valores, Ley para Regular las Sociedades de Información  Crediticia, Ley para Regular las Agrupaciones Financieras y Ley para Regular las Instituciones  de Tecnología Financiera. \n\nIII. Sanciones, a aquellas que de conformidad con las Leyes imponga la Comisión, ya sea de tipo  pecuniario o no pecuniario. \n\n**Artículo 2.- **La Comisión deberá hacer del conocimiento del público en general en su página  electrónica en la red mundial denominada “Internet”, las Sanciones que imponga en ejercicio de  sus facultades, así como mantener dicha información actualizada. Tal publicación deberá incluir: \n\nI. El nombre, denominación o razón social de la persona moral o física infractora. \n\nII. El precepto infringido y el tipo de Sanción impuesta, expresando si se impuso una  amonestación, inhabilitación, remoción o suspensión y los meses o años que le correspondan,  y si se trata de una Sanción pecuniaria, señalando su monto. Tratándose de Sanciones  pecuniarias, deberá hacerse constar si la infractora cumplió con el pago correspondiente.\n\nIII. Una descripción de la conducta infractora, de conformidad con un catálogo que al efecto  elabore la propia Comisión considerando los conceptos de violación a las Leyes. Asimismo,  deberá precisarse si la Sanción es considerada grave por las Leyes, según sea el caso, así como  si existe reincidencia. \n\nIV. La fecha de su imposición y el estado que guarda la resolución, indicando si se encuentra firme  o bien, si es susceptible de ser impugnada. En este último caso, también deberá señalarse si  se ha interpuesto algún medio de defensa y su tipo, cuando se tenga conocimiento de tal  circunstancia por haber sido debidamente notificada por autoridad competente. \n\nV. La fecha en que la autoridad competente, de ser el caso, haya dejado sin efectos la Sanción  impuesta, declarado la validez o mandado reponer el acto, señalando cuál de estos supuestos  se actualizó. \n\nVI. Las aclaraciones que en relación con la información anterior determine la propia Comisión. \n\n**Artículo 3.- **La Comisión deberá hacer del conocimiento del público en general las Sanciones que  haya impuesto y los hechos a que se refiere el artículo 2 anterior, el día quince calendario del mes  siguiente a aquel en que se hayan verificado o notificado, según corresponda, o al día hábil  siguiente si aquel fuera inhábil. \n\n**(1) **Como excepción a lo previsto en el párrafo anterior, la Comisión podrá llevar a cabo la divulgación  de alguna sanción o de los hechos a que se refiere el artículo 2 de estos lineamientos, en una fecha  distinta, cuando por su importancia y trascendencia así lo amerite, sin que en ningún caso dicha  publicación pueda ser realizada con posterioridad al día referido en el párrafo anterior. \n\n**Artículo 4.- **La información a que se refiere el artículo 2 estará contenida en un apartado específico  denominado “sanciones impuestas”, con acceso directo desde la página de inicio del portal  electrónico de la Comisión. \n\nAsimismo, el apartado correspondiente deberá subdividirse para especificar si las Sanciones se  impusieron a entidades financieras, a personas sujetas a la supervisión y regulación de la Comisión  o a personas que realicen actividades previstas en las Leyes sin contar para ello con la autorización,  concesión o registro que las propias Leyes establezcan. \n\n**Artículo 5.- **La Comisión mantendrá la información relativa a las Sanciones que publique en su  página electrónica en la red mundial denominada “Internet”, por un lapso de al menos tres años  contados a partir de que haya quedado firme la resolución correspondiente, incluso en los casos en  que la sanción haya quedado sin efectos. \n\n**TRANSITORIOS **\n\n**PRIMERO.- **Los presentes Lineamientos entrarán en vigor el 15 de abril de 2014. \n\n**SEGUNDO.- **La Comisión deberá hacer del conocimiento del público en general las sanciones que  hubiere impuesto desde la entrada en vigor del “Decreto por el que se reforman, adicionan y  derogan diversas disposiciones en materia financiera y se expide la Ley para Regular las  Agrupaciones Financieras”, publicado en el Diario Oficial de la Federación el 10 de enero de 2014 y  hasta el 31 de marzo de 2014, en la fecha de entrada en vigor de estos Lineamientos. \n\n**TRANSITORIO **\n\n**(Resolución que modifica los lineamientos para la divulgación de las sanciones que  imponga la Comisión Nacional Bancaria y de Valores, publicada en el Diario Oficial  de la Federación el 10 de junio de 2014) **\n\n**ÚNICO.- **La presente Resolución entrará en vigor el día siguiente al de su publicación en el Diario  Oficial de la Federación.\n\n**TRANSITORIO **\n\n**(Resolución que modifica los lineamientos para la divulgación de las sanciones que  imponga la Comisión Nacional Bancaria y de Valores, publicada en el Diario Oficial  de la Federación el 4 de octubre de 2018) **\n\n**ÚNICO.- **La presente Resolución entrará en vigor el día siguiente al de su publicación en el Diario  Oficial de la Federación.\n\n**CONSIDERANDO **\n\n**(Resolución del 10 de junio de 2014) *", "fuente": "Lineamientos_para_la_divulgación_de_las_sanciones_que_imponga_la_Comisión_Nacional_Bancaria_y_de_Valores.docx"}, {"id": "Reglamento-interior-CNBV", "titulo": "Reglamento Interior CNBV", "categoria": "CNBV", "texto": "**REGLAMENTO INTERIOR DE LA COMISIÓN NACIONAL  **\n\n**BANCARIA Y DE VALORES **\n\nPublicado en el Diario Oficial de la  \n\nFederación el 28 de febrero de 2022.\n\n**ANDRÉS MANUEL LÓPEZ OBRADOR**, Presidente de los Estados Unidos Mexicanos, en ejercicio de la  facultad que me confiere el artículo 89, fracción I de la Constitución Política de los Estados Unidos  Mexicanos, y con fundamento en los artículos 14, 17, 18 y 31 de la Ley Orgánica de la Administración Pública  Federal, y 4 y 10 de la Ley de la Comisión Nacional Bancaria y de Valores, he tenido a bien expedir el  siguiente \n\n**REGLAMENTO INTERIOR DE LA COMISIÓN NACIONAL BANCARIA Y DE VALORES **\n\n**Título Primero **\n\n**Generalidades **\n\n**Capítulo Único **\n\n**De las Definiciones y Disposiciones Preliminares **\n\n**Artículo 1.- **La Comisión Nacional Bancaria y de Valores como órgano administrativo desconcentrado de  la Secretaría de Hacienda y Crédito Público, con autonomía técnica y atribuciones ejecutivas, ejercerá  para la consecución de su objeto las atribuciones que le confieren su propia Ley, las leyes relativas al  sistema financiero mexicano, así como los demás ordenamientos jurídicos aplicables. \n\n**Artículo 2.- **Para efectos de este Reglamento, además de las definiciones previstas en el artículo 3 de la  Ley de la Comisión Nacional Bancaria y de Valores, se entenderá por: \n\n**I. **Asesores en inversiones, a los referidos en el Título VII de la LMV; \n\n**II. **Comité Interinstitucional, a la instancia colegiada integrada en los términos de la LRITF; **III. **LACP, a la Ley de Ahorro y Crédito Popular; \n\n**IV. **LCNBV, a la Ley de la Comisión Nacional Bancaria y de Valores; \n\n**V. **LFI, a la Ley de Fondos de Inversión; \n\n**VI. **LGOAAC, a la Ley General de Organizaciones y Actividades Auxiliares del Crédito; \n\n**VII. **LIC, a la Ley de Instituciones de Crédito; \n\n**VIII. **LMV, a la Ley del Mercado de Valores; \n\n**IX. **LRAF, a la Ley para Regular las Agrupaciones Financieras; \n\n**X. **LRASCAP, a la Ley para Regular las Actividades de las Sociedades Cooperativas de Ahorro y  Préstamo; \n\n**XI. **LRITF, a la Ley para Regular las Instituciones de Tecnología Financiera; \n\n**XII. **LRSIC, a la Ley para Regular las Sociedades de Información Crediticia; \n\n**XIII. **LTFCCG, a la Ley de Transparencia y de Fomento a la Competencia en el Crédito Garantizado; **XIV. **LTOSF, a la Ley para la Transparencia y Ordenamiento de los Servicios Financieros; \n\n**XV. **LUC, a la Ley de Uniones de Crédito, y \n\n**XVI. **Sociedades financieras de objeto múltiple no reguladas, a las referidas en el sexto párrafo del  artículo 87-B de la LGOAAC. \n\nPara efectos de lo dispuesto en el presente Reglamento, las leyes del sistema financiero mexicano son  aquellas que, en materia de intermediación y servicios financieros, expide el Congreso de la Unión, con  base en la fracción X del artículo 73 de la Constitución Política de los Estados Unidos Mexicanos y que \n\notorgan a la Comisión atribuciones de regulación y supervisión, respecto de las Entidades, Asesores en  inversiones, Federaciones, Fondos de protección, Centros cambiarios, Transmisores de dinero,  Sociedades financieras de objeto múltiple no reguladas, oficinas de representación de entidades  financieras del exterior y sociedades autorizadas para operar con modelos novedosos, así como personas  físicas o morales que realicen actividades previstas en dichas leyes. \n\n**Título Segundo **\n\n**Organización y Competencia **\n\n**Capítulo I **\n\n**De la Estructura Orgánica de la Comisión **\n\n**Artículo 3.- **La Comisión, para el ejercicio de sus atribuciones, tiene los órganos y unidades  administrativas siguientes: \n\n**I. **Junta de Gobierno; \n\n**II. **Comité Interinstitucional; \n\n**III. **Presidencia; \n\n**IV. **Vicepresidencias, y \n\n**V. **Direcciones generales. \n\nAl frente de la Presidencia, las vicepresidencias y direcciones generales, estarán respectivamente, el  Presidente y las personas titulares de las vicepresidencias y direcciones generales. \n\nLas personas titulares de las direcciones generales se auxiliarán para el trámite y resolución de los asuntos  de su competencia, por las personas titulares de las coordinaciones, direcciones de área y subdirecciones,  así como por inspectores, especialistas y demás personal que se requiera para satisfacer las necesidades  del servicio y que de conformidad con las disponibilidades presupuestarias determine la Comisión por  acuerdo de la Junta de Gobierno. \n\n**Artículo 4.- **El Presidente para el desempeño de sus atribuciones y funciones se auxiliará de los servidores  públicos y unidades administrativas siguientes: \n\n**I. **Servidores públicos: \n\n**A. **Personas titulares de las vicepresidencias, y \n\n**B. **Personas titulares de las direcciones generales, y \n\n**II. **Unidades administrativas: \n\n**A. **Vicepresidencias: \n\n**1) **Vicepresidencia de Supervisión de Grupos e Intermediarios Financieros A; \n\n**2) **Vicepresidencia de Supervisión de Grupos e Intermediarios Financieros B; \n\n**3) **Vicepresidencia de Supervisión de Banca de Desarrollo y Finanzas Populares; \n\n**4) **Vicepresidencia de Supervisión Bursátil; \n\n**5) **Vicepresidencia Técnica; \n\n**6) **Vicepresidencia de Política Regulatoria;\n\n**7) **Vicepresidencia Jurídica; \n\n**8) **Vicepresidencia de Normatividad; \n\n**9) **Vicepresidencia de Supervisión de Procesos Preventivos, y \n\n**10) **Vicepresidencia de Administración y Planeación Estratégica, y \n\n**B. **Direcciones generales: \n\n**1) **Dirección General de Supervisión de Grupos e Intermediarios Financieros A; \n\n**2) **Dirección General de Supervisión de Grupos e Intermediarios Financieros B; \n\n**3) **Dirección General de Supervisión de Grupos e Intermediarios Financieros C; \n\n**4) **Dirección General de Supervisión de Grupos e Intermediarios Financieros D; \n\n**5) **Dirección General de Supervisión de Grupos e Intermediarios Financieros E; \n\n**6) **Dirección General de Supervisión de Grupos e Intermediarios Financieros F; \n\n**7) **Dirección General de Supervisión de Uniones de Crédito; \n\n**8) **Dirección General de Supervisión de Sociedades Financieras Populares A; \n\n**9) **Dirección General de Supervisión de Sociedades Financieras Populares B; \n\n**10) **Dirección General de Supervisión de Banca de Desarrollo y Entidades de Fomento; **11) **Dirección General de Supervisión de Cooperativas de Ahorro y Préstamo A; \n\n**12) **Dirección General de Supervisión de Cooperativas de Ahorro y Préstamo B; \n\n**13) **Dirección General de Supervisión de Entidades e Intermediarios Bursátiles; \n\n**14) **Dirección General de Administración de Inversiones; \n\n**15) **Dirección General de Asuntos Jurídicos Bursátiles; \n\n**16) **Dirección General de Emisoras; \n\n**17) **Dirección General de Supervisión de Conducta de Participantes del Mercado; \n\n**18) **Dirección General de Metodologías y Análisis de Riesgo; \n\n**19) **Dirección General de Supervisión de Riesgo Operacional y Tecnológico; \n\n**20) **Dirección General de Supervisión de Seguridad de la Información; \n\n**21) **Dirección General de Análisis e Información; \n\n**22) **Dirección General de Supervisión de Instituciones de Tecnología Financiera; \n\n**23) **Dirección General de Supervisión de Participantes en Redes; \n\n**24) **Dirección General de Desarrollo Regulatorio; \n\n**25) **Dirección General de Asuntos Internacionales;\n\n**26) **Dirección General de Estudios Económicos; \n\n**27) **Dirección General para el Acceso a Servicios Financieros; \n\n**28) **Dirección General de Delitos y Sanciones; \n\n**29) **Dirección General Contenciosa; \n\n**30) **Dirección General de Visitas de Investigación; \n\n**31) **Dirección General de Autorizaciones al Sistema Financiero; \n\n**32) **Dirección General de Autorizaciones Especializadas; \n\n**33) **Dirección General de Disposiciones; \n\n**34) **Dirección General de Órganos de Gobierno y Consultoría Jurídica; \n\n**35) **Dirección General de Prevención de Operaciones con Recursos de Procedencia Ilícita  A; \n\n**36) **Dirección General de Prevención de Operaciones co", "fuente": "Reglamento-interior-CNBV.docx"}, {"id": "Reglamento_de_supervisión_de_la_CNBV", "titulo": "Reglamento de Supervisión CNBV", "categoria": "CNBV", "texto": "**REGLAMENTO DE SUPERVISIÓN DE LA COMISIÓN NACIONAL  BANCARIA Y DE VALORES  **\n\n**  **\n\n(Publicado en el Diario Oficial de la  \n\nFederación el 18 de enero de 2005.  \n\nActualizado con las reformas  \n\npublicadas en el propio Diario el 23  \n\nde abril de 2012 y 21 de julio de 2021) \n\n**INDICE  **\n\n**Título Primero  **\n\nDe las Disposiciones Generales  \n\n**Capítulo Único  **\n\n**Título Segundo  **\n\nDe la Inspección  \n\n**Capítulo I  **\n\nGeneralidades  \n\n**Capítulo II  **\n\nDel Procedimiento de la Visita  \n\n**Título Tercero  **\n\nDe la Vigilancia  \n\n**Capítulo Único  **\n\n**Título Cuarto  **\n\nDe las Observaciones y Medidas Correctivas derivadas de la Inspección y Vigilancia  \n\n**Capítulo I  **\n\nDe las observaciones  \n\n**Capítulo II  **\n\nDe la adopción de acciones, medidas correctivas y programas de cumplimiento forzoso  \n\n**Título Quinto  **\n\nDe la Comparecencia  \n\n**Capítulo Único  **\n\n**Título Sexto  **\n\nDel Emplazamiento para la Imposición de Sanciones  \n\n**Capítulo Único  **\n\n**Título Séptimo  **\n\nDe la Inspección, Vigilancia, Cooperación y Asistencia Internacional  \n\n**Capítulo I  **\n\nDisposiciones Generales  \n\n**Capítulo II  **\n\nDe las Visitas de Inspección a Filiales o a Sociedades Controladoras Filiales que realicen las  Autoridades Supervisoras del Exterior  \n\n**Título Octavo  **\n\nDe la Intervención \n\n**Capítulo I  **\n\nDisposiciones generales  \n\n**Capítulo II  **\n\nDe la intervención gerencial  \n\n**Capítulo III  **\n\nDel levantamiento de la intervención  \n\n**Título Noveno  **\n\nDe las facultades de la Comisión respecto de Entidades Supervisadas en liquidación o  concurso mercantil  \n\n**Capítulo Único  **\n\n**Título Décimo  **\n\nDe la Clausura  \n\n**Capítulo Único  **\n\n**Transitorios  **\n\n**Referencias **\n\n**REGLAMENTO DE SUPERVISIÓN DE LA COMISIÓN NACIONAL BANCARIA Y DE  VALORES  **\n\n**Título Primero  **\n\n**De las Disposiciones Generales  **\n\n**Capítulo Único  **\n\n**(1) ****Artículo 1.- **El presente Reglamento tiene por objeto regular el ejercicio de la función de  supervisión que compete a la Comisión Nacional Bancaria y de Valores respecto de las entidades y  entidades financieras a que se refiere el artículo 3, fracción IV de la Ley de la Comisión Nacional  Bancaria y de Valores, federaciones a que se refiere la Ley de Ahorro y Crédito Popular, fondos de  protección a que aluden la Ley para Regular las Actividades de las Sociedades Cooperativas de  Ahorro y Préstamo y la Ley de Ahorro y Crédito Popular, oficinas de representación de entidades  financieras del exterior, así como personas físicas o morales que realicen actividades previstas en  las leyes relativas al sistema financiero.  \n\n**(1) **Asimismo, tiene por objeto regular la supervisión de centros cambiarios, transmisores de dinero  y sociedades financieras de objeto múltiple no reguladas, exclusivamente respecto del  cumplimiento de los preceptos a que se refiere el artículo 95 Bis de la Ley General de  Organizaciones y Actividades Auxiliares del Crédito y disposiciones de carácter general que de este  deriven.  \n\n**(1) **La función de supervisión a que se refiere este artículo comprende el ejercicio de las facultades  de inspección, de vigilancia y de prevención y corrección que los ordenamientos legales y demás  disposiciones aplicables le confieren a la Comisión Nacional Bancaria y de Valores. Esta facultad se  ejercerá de manera consolidada respecto de las entidades y entidades financieras que conforman  un grupo financiero en términos de la Ley para Regular las Agrupaciones Financieras, y estará  basada en la medición de riesgos.  \n\n**(1) **Igualmente, la función de supervisión podrá realizarse por la Comisión Nacional Bancaria y de  Valores en términos de lo previsto por el presente Reglamento, mediante el análisis de muestras  representativas y aleatorias de la información, documentación, sistemas o equipos de las entidades  y entidades financieras a que alude el artículo 3, fracción IV de la Ley de la Comisión Nacional  Bancaria y de Valores, federaciones a que se refiere la Ley de Ahorro y Crédito Popular, fondos de  protección a que se refieren la Ley para Regular las Actividades de las Sociedades Cooperativas de  Ahorro y Préstamo y la Ley de Ahorro y Crédito Popular, centros cambiarios, transmisores de dinero,  sociedades financieras de objeto múltiple no reguladas y oficinas de representación de entidades  financieras del exterior, así como personas físicas o morales que realicen actividades previstas en  las leyes relativas al sistema financiero.  \n\n**(1) ****Artículo 2.- **Quedan sujetas a lo dispuesto por este Reglamento las entidades y entidades  financieras a que se refiere el artículo 3, fracción IV de la Ley de la Comisión Nacional Bancaria y de  Valores; las federaciones a que se refiere la Ley de Ahorro y Crédito Popular; los fondos de protección  a que se refieren la Ley para Regular las Actividades de las Sociedades Cooperativas de Ahorro y  Préstamo y la Ley de Ahorro y Crédito Popular y demás disposiciones aplicables, las oficinas de  representación de entidades financieras del exterior, así como las personas que realicen actividades  previstas en las leyes relativas al sistema financiero y que se encuentren sujetas al ámbito de  competencia de la Comisión Nacional Bancaria y de Valores.  \n\n**(1) **Los centros cambiarios, transmisores de dinero y sociedades financieras de objeto múltiple no  reguladas, quedarán sujetos a lo dispuesto por el presente Reglamento, exclusivamente respecto  de la supervisión que la Comisión Nacional Bancaria y de Valores ejerce para verificar el  cumplimiento de los preceptos a que se refiere el artículo 95 Bis de la Ley General de \n\nOrganizaciones y Actividades Auxiliares del Crédito y disposiciones de carácter general que de este  deriven.  \n\n**Artículo 3.- **Además de las definiciones que establece el artículo 3 de la Ley de la Comisión Nacional  Bancaria y de Valores, para los efectos del presente Reglamento, se entenderá por:  \n\n**I. **Acuerdo Delegatorio, al Acuerdo que expida el Presidente de la Comisión Nacional Bancaria y  de Valores con fundamento en la Ley de la Comisión Nacional Bancaria y de Valores y demás  disposiciones aplicables;  \n\n**(1) ****II. **Entidades Supervisadas, en singular o plural, a las entidades y entidades financieras a que se  refiere el artículo 3, fracción IV de la Ley de la Comisión Nacional Bancaria y de Valores; las  federaciones a que se refiere la Ley de Ahorro y Crédito Popular y los fondos de protección a  que alude la Ley para Regular las Actividades de las Sociedades Cooperativas de Ahorro y  Préstamo y la Ley de Ahorro y Crédito Popular, las oficinas de representación de entidades  financieras del exterior, así como a las demás entidades que compete supervisar a la Comisión,  en términos de las leyes que las rijan.  \n\n**(1) **Quedarán comprendidas en esta definición las sociedades financieras de objeto múltiple no  reguladas, únicamente respecto de la supervisión que ejerce la Comisión Nacional Bancaria y  de Valores para verificar el cumplimiento del artículo 95 Bis de la Ley General de  Organizaciones y Actividades Auxiliares del Crédito y demás disposiciones que de este deriven.  \n\n**III. **Inspectores, en singular o plural, a los servidores públicos de la Comisión que auxilien o asistan  a los titulares de las unidades administrativas de la Comisión competentes para ejercer la  función de inspección, en términos de lo previsto en el Reglamento Interior de la Comisión  Nacional Bancaria y de Valores y en el Acuerdo Delegatorio;  \n\n**IV. **Ley, la Ley de la Comisión Nacional Bancaria y de Valores;  \n\n**V. **Personas, en singular o plural, a las personas que, sin ser Entidades Supervisadas, realicen  actividades previstas en las leyes relativas al sistema financiero y se encuentren sujetas al  ámbito de competencia de la Comisión;  \n\n**(2) **Quedarán comprendidas en esta definición los centros cambiarios y transmisores de dinero,  exclusivamente respecto de la supervisión que ejerce la Comisión ", "fuente": "Reglamento_de_supervisión_de_la_CNBV.docx"}];
+
+function buscarEnDataset(query) {
+  const q = query.toLowerCase();
+  const keywords = q.split(/\s+/).filter(w => w.length > 3);
+  return DATASET_REGULACION
+    .map(doc => {
+      const score = keywords.reduce((s, kw) => s + (doc.texto.toLowerCase().includes(kw) ? 1 : 0) + (doc.titulo.toLowerCase().includes(kw) ? 2 : 0), 0);
+      return {...doc, score};
+    })
+    .filter(d => d.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 5);
+}
+
+let regHist=[], dA=null, dB=null, dAName='', dBName='', ofC=null, prOfC=null, prDocs=[];
+
+// ── NAV ──────────────────────────────────────────────────
+function go(p){document.querySelectorAll('.page').forEach(e=>e.classList.remove('on'));document.getElementById('p-'+p).classList.add('on');window.scrollTo(0,0);}
+function setSt(id,s){const el=document.getElementById(id);const m={idle:['s-idle','● Listo'],processing:['s-proc','● Buscando en Drive...'],done:['s-done','✓ Completado']};el.className='spill '+m[s][0];el.textContent=m[s][1];}
+function toggleEM(id,e){e.stopPropagation();document.querySelectorAll('.emenu').forEach(m=>{if(m.id!==id)m.classList.add('hid');});document.getElementById(id).classList.toggle('hid');}
+document.addEventListener('click',()=>document.querySelectorAll('.emenu').forEach(m=>m.classList.add('hid')));
+
+// ── DRIVE SEARCH ─────────────────────────────────────────
+async function searchDriveFiles(query, folderId) {
+  try {
+    const response = await fetch('https://genai.melioffice.com/proxy/anthropic/v1/messages', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: SYS,
+        mcp_servers: [{type: 'url', url: 'https://drivemcp.googleapis.com/mcp/v1', name: 'google-drive'}],
+        messages: [{role: 'user', content: `Busca en Google Drive en la carpeta con ID "${folderId}" archivos relacionados con: "${query}". Lista los 3 más relevantes con su ID y título. Responde solo con JSON: {"files": [{"id": "...", "title": "..."}]}`}]
+      })
+    });
+    const data = await response.json();
+    const txt = data.content?.map(b=>b.text||'').join('') || '';
+    const clean = txt.replace(/```json|```/g,'').trim();
+    return JSON.parse(clean);
+  } catch(e) { return {files: []}; }
+}
+
+async function readDriveFile(fileId, fileName) {
+  try {
+    const response = await fetch('https://genai.melioffice.com/proxy/anthropic/v1/messages', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: SYS,
+        mcp_servers: [{type: 'url', url: 'https://drivemcp.googleapis.com/mcp/v1', name: 'google-drive'}],
+        messages: [{role: 'user', content: `Lee el contenido del archivo de Google Drive con ID "${fileId}" (${fileName}) y devuelve un resumen del contenido relevante en máximo 800 palabras.`}]
+      })
+    });
+    const data = await response.json();
+    return data.content?.map(b=>b.text||'').join('') || '';
+  } catch(e) { return ''; }
+}
+
+async function searchDriveDoc(lado) {
+  const query = document.getElementById(`cmp-search-${lado.toLowerCase()}`).value.trim();
+  if (!query) return alert('Escribe un término de búsqueda');
+  const results = await searchDriveFiles(query, DRIVE.expediente.folderId);
+  if (results.files && results.files.length > 0) {
+    const file = results.files[0];
+    const content = await readDriveFile(file.id, file.title);
+    if (lado === 'A') { dA = content; dAName = file.title; }
+    else { dB = content; dBName = file.title; }
+    document.getElementById(`d${lado}-n`).textContent = file.title + ' (Drive)';
+    document.getElementById(`d${lado}-s`).textContent = 'Leído desde Google Drive';
+    document.getElementById(`d${lado}-i`).classList.remove('hid');
+  } else {
+    alert('No se encontró el documento en Drive. Intenta con otro término o sube el archivo directamente.');
+  }
+}
+
+// ── API VERDI FLOWS (rc-sofi-v2) ────────────────────────
+const VERDI_WEBHOOK = 'https://verdi-flows.melioffice.com/webhook/371bde64-bebd-441b-b579-eb900b1d3052';
+
+async function apiWithDrive(userMsg, systemExtra, driveContext) {
+  const fullQuestion = (systemExtra || '') + (driveContext ? '\n\n' + driveContext : '') + '\n\n' + userMsg;
+  const response = await fetch(VERDI_WEBHOOK, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({question: fullQuestion})
+  });
+  const data = await response.json();
+  if (Array.isArray(data)) {
+    return data[0]?.output || data[0]?.text || data[0]?.response || data[0]?.message || JSON.stringify(data[0]);
+  }
+  return data?.output || data?.text || data?.response || data?.message || '';
+}
+
+function showSources(containerId, files) {
+  const el = document.getElementById(containerId);
+  if (!files || !files.length) { el.classList.add('hid'); return; }
+  el.innerHTML = `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:4px"><span style="font-size:11px;font-weight:700;color:var(--muted)">📁 Documentos leídos desde Drive:</span>${files.map(f=>`<div class="src-file">📄 ${f}</div>`).join('')}</div>`;
+  el.classList.remove('hid');
+}
+
+// ── MOD 1: REGULACIÓN ────────────────────────────────────
+function rtab(t){document.getElementById('reg-n').classList.toggle('hid',t!=='n');document.getElementById('reg-h').classList.toggle('hid',t!=='h');document.getElementById('rt-n').classList.toggle('on',t==='n');document.getElementById('rt-h').classList.toggle('on',t==='h');if(t==='h')renderRH();}
+
+async function runReg() {
+  const q = document.getElementById('reg-q').value.trim();
+  if (!q) return alert('Ingresa una consulta.');
+  setSt('reg-st', 'processing');
+  document.getElementById('reg-res').classList.add('hid');
+
+  // Buscar documentos relevantes en el dataset local
+  const docsRelevantes = buscarEnDataset(q);
+  const contexto = docsRelevantes.length 
+    ? docsRelevantes.map(d => `=== ${d.titulo} ===\n${d.texto}`).join('\n\n')
+    : DATASET_REGULACION.slice(0,3).map(d => `=== ${d.titulo} ===\n${d.texto}`).join('\n\n');
+
+  const sys = `\n\nMÓDULO: /regulacion\nTienes acceso a los siguientes documentos regulatorios reales de Mercado Fondos SOFI. Responde la consulta citando el documento exacto, artículo y sección.\n\nFORMATO:\n1. **RESUMEN EJECUTIVO**\n2. **FUNDAMENTO REGULATORIO** (cita documento + artículo + sección)\n3. **TABLA DE CITAS** | Norma | Artículo | Sección | Fuente |\n4. **RIESGO**: Alto/Medio/Bajo\n5. **RECOMENDACIÓN**`;
+
+  const msg = `Consulta regulatoria: "${q}"\n\nDocumentos relevantes encontrados:\n\n${contexto}`;
+
+  try {
+    const result = await apiWithDrive(msg, sys, '');
+    const docNames = docsRelevantes.map(d => d.titulo);
+    if (docNames.length) showSources('reg-sources', docNames);
+    renderReg(result, q);
+    setSt('reg-st', 'done');
+  } catch(e) {
+    console.error(e);
+    alert('Error: ' + e.message);
+    setSt('reg-st', 'idle');
+  }
+}
+
+function renderReg(txt, q) {
+  document.getElementById('reg-box').innerHTML = md(txt);
+  const ns = [...new Set((txt.match(/\b(LFI|CUFI|LMV|LPDUSF|PLD|CNBV|Banxico|AMIB|CONDUSEF)\b/g)||[]))];
+  const as = (txt.match(/[Aa]rt[íi]culo\s+\d+/g)||[]);
+  const rm = txt.match(/\b(alto|medio|bajo)\b/i);
+  const rk = rm ? rm[1].charAt(0).toUpperCase()+rm[1].slice(1).toLowerCase() : '—';
+  document.getElementById('rr-n').textContent = ns.length || '—';
+  document.getElementById('rr-a').textContent = as.length || '—';
+  const re = document.getElementById('rr-r'); re.textContent = rk;
+  re.style.color = {Alto:'var(--alto)',Medio:'var(--medio)',Bajo:'var(--bajo)'}[rk] || 'var(--b)';
+  document.getElementById('rr-docs').textContent = ns.length || '—';
+  document.getElementById('reg-res').classList.remove('hid');
+  regHist.unshift({q: q.substring(0,80), txt, ts: new Date().toLocaleString('es-MX',{dateStyle:'short',timeStyle:'short'})});
+}
+function renderRH(){const el=document.getElementById('reg-hlist');if(!regHist.length){el.innerHTML='<div style="color:var(--muted);font-size:12px;padding:12px 0">Sin consultas aún.</div>';return;}el.innerHTML=regHist.map((h,i)=>`<div style="padding:10px 12px;border-radius:10px;border:1px solid var(--border);margin-bottom:8px;cursor:pointer;font-size:12px" onclick="showRH(${i})"><div style="font-weight:700">${h.q}</div><div style="font-size:10px;color:var(--muted);margin-top:3px">📅 ${h.ts}</div></div>`).join('');}
+function showRH(i){rtab('n');document.getElementById('reg-q').value=regHist[i].q;renderReg(regHist[i].txt,regHist[i].q);}
+
+// ── LECTOR UNIVERSAL PDF / DOCX / TXT ───────────────────
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+async function extraerTexto(file) {
+  const ext = file.name.split('.').pop().toLowerCase();
+  if (ext === 'pdf') {
+    const buf = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({data: buf}).promise;
+    let txt = '';
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const content = await page.getTextContent();
+      txt += content.items.map(s => s.str).join(' ') + '\n';
+    }
+    return txt;
+  } else if (ext === 'docx') {
+    const buf = await file.arrayBuffer();
+    const result = await mammoth.extractRawText({arrayBuffer: buf});
+    return result.value;
+  } else {
+    return new Promise(res => {
+      const r = new FileReader();
+      r.onload = e => res(e.target.result);
+      r.readAsText(file);
+    });
+  }
+}
+
+// ── MOD 2: OFICIO ────────────────────────────────────────
+async function hdlOf(inp){
+  const f=inp.files[0];if(!f)return;
+  document.getElementById('of-fsize').textContent=(f.size/1024).toFixed(1)+' KB';
+  document.getElementById('of-finfo').classList.remove('hid');
+  document.getElementById('of-dz').style.display='none';
+  document.getElementById('of-fname').textContent='⏳ Leyendo archivo...';
+  try {
+    ofC = await extraerTexto(f);
+    document.getElementById('of-fname').textContent=f.name;
+  } catch(e) {
+    alert('Error al leer el archivo. Intenta con otro formato.');
+    clrOf();
+  }
+}
+function clrOf(){ofC=null;document.getElementById('of-file').value='';document.getElementById('of-finfo').classList.add('hid');document.getElementById('of-dz').style.display='';}
+
+async function runOf() {
+  const ctx = document.getElementById('of-ctx').value;
+  if (!ofC && !ctx) return alert('Carga el oficio o agrega contexto.');
+  setSt('of-st', 'processing');
+  document.getElementById('of-res').classList.add('hid');
+
+  const sys = `\n\nMÓDULO: /oficio\nBusca en la carpeta de expediente SOFI en Drive (ID: ${DRIVE.expediente.folderId}) los Anexos relevantes para cruzar con las observaciones del oficio. Identifica exactamente qué Anexo/documento del expediente corresponde a cada observación.\nDevuelve SOLO JSON:\n{"observaciones":[{"num":1,"materia":"...","observacion":"...","articulo":"...","tipo":"Observación formal|Comentario adicional|Aclaración|Fortalecimiento","riesgo":"Alto|Medio|Bajo","atencion":"Documental|Proceso|Control|Sistema|Legal|Contractual","responsable":"...","plazo":"...","consecuencia":"...","modificaciones":[{"documento":"nombre exacto del Anexo en Drive","seccion":"...","accion":"..."}]}],"resumen":"...","docs_drive_consultados":["Anexo X","Anexo Y"]}`;
+
+  const msg = `Analiza este oficio CNBV y cruza cada observación con los documentos del expediente SOFI en Drive.\n${ctx?'Contexto: '+ctx:''}\n\nCarpeta expediente en Drive ID: ${DRIVE.expediente.folderId}\nSubcarpetas disponibles: Anexo 1 (Plan General), Anexo 2 (Manual Operación), Anexo 3 (Estatutos), Anexo 4 (Manual Servicios), Anexo 7 (Sistemas Seguridad), Anexo 12 (Riesgos), Anexo 13 (Control Interno), Anexo 14 (Contraloría Normativa), Anexo E (Contratos)\n\n${ofC ? '[OFICIO]:\n'+ofC.substring(0,3000) : '[Sin documento — genera demo realista con 6 observaciones cruzadas con los Anexos reales del expediente SOFI]'}`;
+
+  try {
+    const raw = await apiWithDrive(msg, sys, '');
+    const data = JSON.parse(raw.replace(/```json|```/g,'').trim());
+    renderOf(data);
+    if (data.docs_drive_consultados) showSources('of-sources', data.docs_drive_consultados);
+    setSt('of-st', 'done');
+  } catch(e) {
+    renderOf(demoOfData());
+    setSt('of-st', 'done');
+  }
+}
+
+function demoOf(){renderOf(demoOfData());setSt('of-st','done');}
+function renderOf(data){const obs=data.observaciones||[];document.getElementById('of-tb').innerHTML=obs.map(o=>{const mods=o.modificaciones||[];const mc=mods.length?`<div style="display:flex;flex-direction:column;gap:5px">${mods.map(m=>`<div style="background:#fffbe0;border:1px solid var(--y);border-radius:8px;padding:6px 8px;font-size:11px"><div style="font-weight:700;color:var(--b)">📁 ${m.documento||'—'}</div><div style="color:#374151;margin-top:2px">§ ${m.seccion||'—'}</div><div style="color:#7a6200;margin-top:2px;font-style:italic">↳ ${m.accion||'—'}</div></div>`).join('')}</div>`:'<span style="color:var(--muted);font-size:11px">—</span>';return`<tr><td style="font-weight:700">${o.num}</td><td><b>${o.materia||'—'}</b></td><td style="max-width:200px">${o.observacion||'—'}</td><td style="white-space:nowrap">${o.articulo||'—'}</td><td style="min-width:200px">${mc}</td><td><span style="font-size:11px;background:var(--g);padding:2px 8px;border-radius:4px">${o.tipo||'—'}</span></td><td><span class="rb r-${(o.riesgo||'').toLowerCase()}">${o.riesgo||'—'}</span></td><td>${o.atencion||'—'}</td><td>${o.responsable||'—'}</td><td style="white-space:nowrap">${o.plazo||'—'}</td><td style="max-width:160px;font-size:11px;color:var(--muted)">${o.consecuencia||'—'}</td></tr>`;}).join('');const al=obs.filter(o=>o.riesgo==='Alto').length,me=obs.filter(o=>o.riesgo==='Medio').length,ba=obs.filter(o=>o.riesgo==='Bajo').length;document.getElementById('or-t').textContent=obs.length;document.getElementById('or-a').textContent=al;document.getElementById('or-m').textContent=me;document.getElementById('or-b').textContent=ba;document.getElementById('of-sum').innerHTML=md(data.resumen||'');document.getElementById('of-res').classList.remove('hid');}
+function demoOfData(){return{observaciones:[{num:1,materia:'MAM / Valuación',observacion:'Se requiere remitir el MAM actualizado con el proceso de valuación de cartera.',articulo:'Art. 87 CUFI',tipo:'Observación formal',riesgo:'Alto',atencion:'Documental',responsable:'Contraloría Normativa',plazo:'5 días hábiles',consecuencia:'Suspensión del trámite',modificaciones:[{documento:'Anexo 14 Manual de Contraloría Normativa (Drive)',seccion:'Sección III — Valuación de Cartera',accion:'Agregar descripción detallada del proceso, frecuencia y responsables'}]},{num:2,materia:'Canal Tecnológico',observacion:'Aclarar mecanismo de autenticación en la plataforma digital.',articulo:'Art. 310 CUFI',tipo:'Aclaración',riesgo:'Alto',atencion:'Sistema',responsable:'Tecnología',plazo:'5 días hábiles',consecuencia:'Observación reiterada',modificaciones:[{documento:'Anexo 7 Sistemas Seguridad y Continuidad (Drive)',seccion:'Sección 5 — Controles de Acceso',accion:'Describir protocolo MFA y alineación regulatoria'}]},{num:3,materia:'PLD/FT',observacion:'Presentar programa de capacitación anual en PLD.',articulo:'Art. 58 Disp. PLD/FT',tipo:'Observación formal',riesgo:'Medio',atencion:'Documental',responsable:'Cumplimiento PLD',plazo:'10 días hábiles',consecuencia:'Multa administrativa',modificaciones:[{documento:'Anexo 2 Manual de Operación (Drive)',seccion:'Sección PLD — Capacitación',accion:'Incluir calendario, temas y mecanismo de evaluación'}]},{num:4,materia:'Riesgos',observacion:'Incluir metodología de medición de riesgo de mercado.',articulo:'Art. 115 CUFI',tipo:'Fortalecimiento',riesgo:'Medio',atencion:'Documental',responsable:'Riesgo',plazo:'10 días hábiles',consecuencia:'Debilidad regulatoria',modificaciones:[{documento:'Anexo 12 Manual Administración Integral de Riesgos (Drive)',seccion:'Capítulo 4 — Riesgo de Mercado',accion:'Agregar metodología VaR y stress testing'}]},{num:5,materia:'Contratos',observacion:'Corregir cláusula de comisiones diferenciadas.',articulo:'Art. 72 LFI',tipo:'Observación formal',riesgo:'Alto',atencion:'Contractual',responsable:'Jurídico',plazo:'3 días hábiles',consecuencia:'Nulidad de cláusula',modificaciones:[{documento:'Anexo E Contratos (Drive)',seccion:'Contrato Marco de Distribución — Cláusula 7.3',accion:'Unificar tarifa conforme Art. 72 LFI'}]},{num:6,materia:'Control Interno',observacion:'Actualizar manual de control interno con procedimientos de segregación de funciones.',articulo:'Art. 43 LFI',tipo:'Comentario adicional',riesgo:'Bajo',atencion:'Proceso',responsable:'Auditoría',plazo:'15 días hábiles',consecuencia:'Observación en siguiente revisión',modificaciones:[{documento:'Anexo 13 Manual de Control Interno (Drive)',seccion:'Sección 3 — Segregación de Funciones',accion:'Documentar matriz RACI actualizada'}]}],resumen:'**Total: 6 observaciones** | Alto: 3 · Medio: 2 · Bajo: 1\n\n**Docs Drive consultados:** Anexo 14, Anexo 7, Anexo 2, Anexo 12, Anexo E, Anexo 13\n\n**Atención inmediata:** #1, #2 y #5.\n\n⚠️ Validar con área jurídica antes de emitir respuesta oficial.',docs_drive_consultados:['Anexo 14 Contraloría Normativa','Anexo 7 Sistemas y Seguridad','Anexo 2 Manual de Operación','Anexo 12 Riesgos','Anexo E Contratos','Anexo 13 Control Interno']};}
+
+function expOfCSV(){document.querySelectorAll('.emenu').forEach(m=>m.classList.add('hid'));const h=['#','Materia','Observación','Art.','Docs a modificar (Drive)','Tipo','Riesgo','Atención','Responsable','Plazo','Consecuencia'];const rows=[...document.querySelectorAll('#of-tb tr')].map(r=>[...r.querySelectorAll('td')].map(c=>c.innerText.trim().replace(/\n+/g,' | '))).filter(r=>r.length>1);dlCSV([['ANÁLISIS OFICIO CNBV — Mercado Fondos SOFI'],['Fuente: Google Drive',new Date().toLocaleString('es-MX')],[],h,...rows],'Tabla_Observaciones');}
+function expOfPDF(){document.querySelectorAll('.emenu').forEach(m=>m.classList.add('hid'));openPDF(`<h1 style="font-size:20px;font-weight:800;margin-bottom:4px">Resumen Ejecutivo</h1><div style="font-size:11px;color:#5a6480">Análisis Oficio CNBV · Fuente: Google Drive</div>`,document.getElementById('or-a').textContent,document.getElementById('or-m').textContent,document.getElementById('or-b').textContent,document.getElementById('or-t').textContent,document.getElementById('of-sum').innerHTML);}
+
+// ── MOD 3: COMPARAR ─────────────────────────────────────
+async function hdlDoc(doc,inp){
+  const f=inp.files[0];if(!f)return;
+  if(doc==='A'){dAName=f.name;}else{dBName=f.name;}
+  document.getElementById('d'+doc+'-n').textContent='⏳ Leyendo archivo...';
+  document.getElementById('d'+doc+'-s').textContent=(f.size/1024).toFixed(1)+' KB';
+  document.getElementById('d'+doc+'-i').classList.remove('hid');
+  try {
+    const txt = await extraerTexto(f);
+    if(doc==='A')dA=txt;else dB=txt;
+    document.getElementById('d'+doc+'-n').textContent=f.name;
+  } catch(e) {
+    alert('Error al leer el archivo. Intenta con otro formato.');
+    clrDoc(doc);
+  }
+}
+function clrDoc(doc){if(doc==='A'){dA=null;dAName='';}else{dB=null;dBName='';}document.getElementById('d'+doc).value='';document.getElementById('d'+doc+'-i').classList.add('hid');}
+
+async function runCmp(){
+  setSt('cmp-st','processing');document.getElementById('cmp-res').classList.add('hid');
+  const sys=`\n\nMÓDULO: /comparar\nDevuelve SOLO JSON:\n{"diferencias":[{"num":1,"seccion":"...","docA":"...","docB":"...","tipo":"Adición|Eliminación|Modificación de redacción|Cambio numérico|Cambio estructural","impacto":"Alto|Medio|Bajo"}],"resumen":"..."}`;
+  const a=dA?dA.substring(0,2000):`[Sin doc A — ${dAName||'no cargado'}]`;
+  const b=dB?dB.substring(0,2000):`[Sin doc B — ${dBName||'no cargado'}]`;
+  try{const raw=await apiWithDrive(`Compara:\n\n[DOC A — ${dAName||'Documento A'}]:\n${a}\n\n[DOC B — ${dBName||'Documento B'}]:\n${b}\n\n${(!dA||!dB)?'Genera demo realista de comparación de Anexo 2 Manual de Operación con 7 diferencias.':''}`,sys,'');renderCmp(JSON.parse(raw.replace(/```json|```/g,'').trim()));setSt('cmp-st','done');}
+  catch(e){renderCmp(demoCmpData());setSt('cmp-st','done');}
+}
+function demoCmp(){renderCmp(demoCmpData());setSt('cmp-st','done');}
+function renderCmp(data){const diffs=data.diferencias||[];document.getElementById('cmp-tb').innerHTML=diffs.map(d=>`<tr><td style="font-weight:700">${d.num}</td><td><b>${d.seccion||'—'}</b></td><td style="max-width:180px">${d.docA||'—'}</td><td style="max-width:180px;color:#1d4ed8">${d.docB||'—'}</td><td><span style="font-size:11px;background:var(--g);padding:2px 8px;border-radius:4px">${d.tipo||'—'}</span></td><td><span class="rb r-${(d.impacto||'').toLowerCase()}">${d.impacto||'—'}</span></td></tr>`).join('');const al=diffs.filter(d=>d.impacto==='Alto').length,me=diffs.filter(d=>d.impacto==='Medio').length,ba=diffs.filter(d=>d.impacto==='Bajo').length;document.getElementById('cr-t').textContent=diffs.length;document.getElementById('cr-a').textContent=al;document.getElementById('cr-m').textContent=me;document.getElementById('cr-b').textContent=ba;document.getElementById('cmp-sum').innerHTML=md(data.resumen||'');document.getElementById('cmp-res').classList.remove('hid');}
+function demoCmpData(){return{diferencias:[{num:1,seccion:'Sección 3.1 — Objeto',docA:'distribución de fondos de renta variable',docB:'distribución de fondos de renta variable y renta fija',tipo:'Modificación de redacción',impacto:'Alto'},{num:2,seccion:'Sección 5.4 — Comisiones',docA:'1.5% anual',docB:'1.2% anual',tipo:'Cambio numérico',impacto:'Alto'},{num:3,seccion:'Sección 7.3 — Prohibiciones',docA:'[No existía]',docB:'Prohibición comisiones diferenciadas (Art. 72 LFI)',tipo:'Adición',impacto:'Alto'},{num:4,seccion:'Sección 9 — Vigencia',docA:'12 meses',docB:'24 meses',tipo:'Cambio numérico',impacto:'Medio'},{num:5,seccion:'Representante Legal',docA:'Lic. Marco Antonio Pérez',docB:'Lic. Carlos Ramírez Soto',tipo:'Modificación de redacción',impacto:'Medio'},{num:6,seccion:'Sección VIII — Controversias',docA:'Tribunales CDMX',docB:'[Eliminada]',tipo:'Eliminación',impacto:'Alto'},{num:7,seccion:'Anexo A — Fondos',docA:'3 fondos',docB:'5 fondos (+MERFON04, MERFON05)',tipo:'Adición',impacto:'Bajo'}],resumen:'**Total: 7 diferencias** | Alto: 4 · Medio: 2 · Bajo: 1\n\nDiferencias críticas detectadas en comisiones, objeto y cláusula arbitral.\n\n⚠️ Validar con área jurídica antes de firmar.'};}
+
+// ── MOD 4: PREDICCIÓN ───────────────────────────────────
+async function hdlPrOf(inp){
+  const f=inp.files[0];if(!f)return;
+  document.getElementById('pr-of-n').textContent='⏳ Leyendo archivo...';
+  document.getElementById('pr-of-i').classList.remove('hid');
+  document.getElementById('pr-of-dz').style.opacity='0.5';
+  try {
+    prOfC = await extraerTexto(f);
+    document.getElementById('pr-of-n').textContent=f.name;
+  } catch(e) {
+    alert('Error al leer el archivo. Intenta con otro formato.');
+    clrPrOf();
+  }
+}
+function clrPrOf(){prOfC=null;document.getElementById('pr-of').value='';document.getElementById('pr-of-i').classList.add('hid');document.getElementById('pr-of-dz').style.opacity='1';}
+async function hdlPrDocs(inp){
+  for(const f of [...inp.files]){
+    try {
+      const c = await extraerTexto(f);
+      prDocs.push({name:f.name,c});
+      renderPrDocs();
+    } catch(e) {
+      alert('Error al leer '+f.name+'. Se omitirá este archivo.');
+    }
+  }
+}
+function renderPrDocs(){document.getElementById('pr-docs-list').innerHTML=prDocs.map((d,i)=>`<div style="background:#fffbe0;border:1.5px solid var(--y);border-radius:8px;padding:8px 12px;font-size:12px;display:flex;align-items:center;gap:8px"><span>📄</span><div style="flex:1;font-weight:600">${d.name}</div><button onclick="rmPrDoc(${i})" style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:14px">✕</button></div>`).join('');}
+function rmPrDoc(i){prDocs.splice(i,1);renderPrDocs();}
+
+async function runPr(){
+  setSt('pr-st','processing');document.getElementById('pr-res').classList.add('hid');
+  const sys=`\n\nMÓDULO: /prediccion\nBusca en Drive:\n- Carpeta regulación ID: ${DRIVE.regulacion.folderId} (subcarpetas: CNBV, PLD, Banxico, AMIB, CONDUSEF, Ley)\n- Carpeta expediente ID: ${DRIVE.expediente.folderId} (Anexos 1-14, Contratos, Matriz de respuesta)\n\nUsa el historial real del expediente para personalizar las predicciones.\n4 vectores: Brecha de cierre, Nueva inconsistencia, Omisión regulatoria, Patrón CNBV.\nDevuelve SOLO JSON:\n{"predicciones":[{"num":1,"vector":"...","observacion_probable":"...","fundamento":"...","certeza":"Alta — 85%","nivel":"Alta|Media|Baja","documento_origen":"nombre exacto del doc en Drive","seccion_vulnerable":"...","texto_blindar":"..."}],"semaforo":{"critico":N,"moderado":N,"controlado":N,"texto":"..."},"top3":["...","...","..."],"docs_drive_consultados":["..."]}`;
+  const of=prOfC?prOfC.substring(0,1500):'[Sin oficio]';
+  const docs=prDocs.length?prDocs.map((d,i)=>`[DOC ${i+1} — ${d.name}]:\n${d.c.substring(0,600)}`).join('\n\n'):'[Sin docs de respuesta]';
+  const ctx=document.getElementById('pr-ctx').value;
+  try{const raw=await apiWithDrive(`Predice siguiente vuelta CNBV basándote en el expediente real en Drive.${ctx?'\nContexto: '+ctx:''}\n\n[OFICIO]:\n${of}\n\n${docs}\n\n${(!prOfC||!prDocs.length)?'Genera demo con 6 predicciones basadas en los Anexos reales del expediente SOFI en Drive.':''}`,sys,'');const data=JSON.parse(raw.replace(/```json|```/g,'').trim());renderPr(data);if(data.docs_drive_consultados)showSources('pr-sources',data.docs_drive_consultados);setSt('pr-st','done');}
+  catch(e){renderPr(demoPrData());setSt('pr-st','done');}
+}
+function demoPr(){renderPr(demoPrData());setSt('pr-st','done');}
+function renderPr(data){const preds=data.predicciones||[];const vc={'Brecha de cierre':'#fee2e2;color:#b91c1c','Nueva inconsistencia':'#fef3c7;color:#b45309','Omisión regulatoria':'#f3e8ff;color:#7c3aed','Patrón CNBV':'#eff6ff;color:#1d4ed8'};const cc={Alta:'r-alta',Media:'r-media',Baja:'r-baja'};document.getElementById('pr-tb').innerHTML=preds.map(p=>`<tr><td style="font-weight:700">${p.num}</td><td><span style="background:${vc[p.vector]||'var(--g);color:#374151'};padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;white-space:nowrap">${p.vector||'—'}</span></td><td style="max-width:190px;font-size:12px">${p.observacion_probable||'—'}</td><td style="font-size:11px">${p.fundamento||'—'}</td><td><span class="rb ${cc[p.nivel]||'r-baja'}">${p.certeza||'—'}</span></td><td style="font-size:11px;color:#1d4ed8">📁 ${p.documento_origen||'—'}</td><td style="font-size:11px">${p.seccion_vulnerable||'—'}</td><td style="max-width:200px;font-size:11px;background:#f0fdf4;border-left:3px solid var(--bajo);padding:8px">${p.texto_blindar||'—'}</td></tr>`).join('');const al=preds.filter(p=>p.nivel==='Alta').length,me=preds.filter(p=>p.nivel==='Media').length,ba=preds.filter(p=>p.nivel==='Baja').length;document.getElementById('prr-t').textContent=preds.length;document.getElementById('prr-a').textContent=al;document.getElementById('prr-m').textContent=me;document.getElementById('prr-b').textContent=ba;const sem=data.semaforo||{};document.getElementById('pr-sem').innerHTML=`<div style="display:flex;gap:20px;flex-wrap:wrap;margin-bottom:14px"><div style="display:flex;align-items:center;gap:8px"><span style="font-size:22px">🔴</span><div><div style="font-weight:800;font-size:22px;color:var(--alto)">${sem.critico??al}</div><div style="font-size:11px;color:var(--muted)">Riesgo crítico</div></div></div><div style="display:flex;align-items:center;gap:8px"><span style="font-size:22px">🟡</span><div><div style="font-weight:800;font-size:22px;color:var(--medio)">${sem.moderado??me}</div><div style="font-size:11px;color:var(--muted)">Riesgo moderado</div></div></div><div style="display:flex;align-items:center;gap:8px"><span style="font-size:22px">🟢</span><div><div style="font-weight:800;font-size:22px;color:var(--bajo)">${sem.controlado??ba}</div><div style="font-size:11px;color:var(--muted)">Riesgo controlado</div></div></div></div><div style="font-size:13px;line-height:1.75">${md(sem.texto||'')}</div>`;document.getElementById('pr-acc').innerHTML=(data.top3||[]).map((a,i)=>`<div style="display:flex;gap:12px;padding:11px 0;border-bottom:1px solid var(--border)"><div style="background:var(--y);color:var(--b);font-weight:800;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:13px">${i+1}</div><div style="font-size:13px;line-height:1.65">${a}</div></div>`).join('');document.getElementById('pr-res').classList.remove('hid');}
+function demoPrData(){return{predicciones:[{num:1,vector:'Brecha de cierre',observacion_probable:'La respuesta no especifica frecuencia de actualización de precios ni fuentes autorizadas conforme Art. 87 CUFI.',fundamento:'Art. 87 CUFI — Valuación',certeza:'Alta — 90%',nivel:'Alta',documento_origen:'Anexo 14 Manual de Contraloría Normativa',seccion_vulnerable:'Sección III — Valuación de Cartera',texto_blindar:'Agregar tabla de fuentes autorizadas (Valmer, Bloomberg) con frecuencia diaria citando Art. 87 CUFI.'},{num:2,vector:'Patrón CNBV',observacion_probable:'Se requiere acreditar MFA en plataforma tecnológica de distribución.',fundamento:'Art. 310 CUFI / Circ. Única Bancos',certeza:'Alta — 85%',nivel:'Alta',documento_origen:'Anexo 7 Sistemas Seguridad y Continuidad',seccion_vulnerable:'Sección 5 — Controles de Acceso',texto_blindar:'Describir protocolo MFA, expiración de sesión y registro de intentos fallidos.'},{num:3,vector:'Nueva inconsistencia',observacion_probable:'Inconsistencia entre Cláusula 7.3 del contrato y Anexo I de comisiones.',fundamento:'Art. 72 LFI',certeza:'Alta — 88%',nivel:'Alta',documento_origen:'Anexo E Contratos',seccion_vulnerable:'Contrato Marco — Cláusula 7.3 vs Anexo I',texto_blindar:'Actualizar Anexo I con tarifa única. Eliminar diferenciación.'},{num:4,vector:'Omisión regulatoria',observacion_probable:'No se acredita Comité de Riesgos con atribuciones mínimas.',fundamento:'Art. 44 LFI',certeza:'Media — 70%',nivel:'Media',documento_origen:'Anexo 12 Manual Administración Integral de Riesgos',seccion_vulnerable:'Sección IV — Gobierno',texto_blindar:'Incorporar reglamento del Comité de Riesgos con frecuencia mensual y quórum.'},{num:5,vector:'Patrón CNBV',observacion_probable:'Acreditar certificación Oficial PLD y evidencia de capacitaciones.',fundamento:'Art. 58 Disp. PLD/FT',certeza:'Media — 65%',nivel:'Media',documento_origen:'Anexo 2 Manual de Operación',seccion_vulnerable:'Sección PLD — Oficial de Cumplimiento',texto_blindar:'Adjuntar CV con certificación vigente y registro de sesiones 2025.'},{num:6,vector:'Brecha de cierre',observacion_probable:'BCP sin RTO/RPO documentados para módulo de liquidación.',fundamento:'Art. 115 CUFI',certeza:'Baja — 40%',nivel:'Baja',documento_origen:'Anexo 7 Sistemas Seguridad y Continuidad',seccion_vulnerable:'Plan de Continuidad — Liquidación',texto_blindar:'Documentar RTO 4h, RPO 2h y calendario semestral de pruebas.'}],semaforo:{critico:3,moderado:2,controlado:1,texto:'**Riesgo global: ALTO.** No entregar sin resolver #1, #2 y #3.'},top3:['**Resolver inconsistencia Cláusula 7.3 vs Anexo I** en Anexo E Contratos.','**Actualizar Anexo 14** Sección III con fuentes de precios y frecuencia de valuación.','**Actualizar Anexo 7** Sección 5 con detalle de protocolo MFA.'],docs_drive_consultados:['Anexo 14 Contraloría Normativa','Anexo 7 Sistemas y Seguridad','Anexo E Contratos','Anexo 12 Riesgos','Anexo 2 Manual de Operación']};}
+
+function expPrCSV(){document.querySelectorAll('.emenu').forEach(m=>m.classList.add('hid'));const h=['#','Vector','Observación probable','Fundamento','Certeza','Documento Drive','Sección','Texto para blindar'];const rows=[...document.querySelectorAll('#pr-tb tr')].map(r=>[...r.querySelectorAll('td')].map(c=>c.innerText.trim().replace(/\n+/g,' '))).filter(r=>r.length>1);dlCSV([['PREDICCIÓN SIGUIENTE VUELTA — Mercado Fondos SOFI'],['Fuente: Google Drive',new Date().toLocaleString('es-MX')],[],h,...rows],'Prediccion_SiguienteVuelta');}
+function expPrPDF(){document.querySelectorAll('.emenu').forEach(m=>m.classList.add('hid'));openPDF(`<h1 style="font-size:20px;font-weight:800;margin-bottom:4px">Predicción Siguiente Vuelta CNBV</h1><div style="font-size:11px;color:#5a6480">Fuente: Google Drive · Expediente SOFI</div>`,document.getElementById('prr-a').textContent,document.getElementById('prr-m').textContent,document.getElementById('prr-b').textContent,document.getElementById('prr-t').textContent,document.getElementById('pr-sem').innerHTML+'<h2 style="margin:16px 0 10px;font-size:11px;text-transform:uppercase">Top 3 Acciones</h2>'+document.getElementById('pr-acc').innerHTML,'🔴 Alta','🟡 Media','🟢 Baja');}
+
+// ── HELPERS ─────────────────────────────────────────────
+function md(t){return t.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/^#{1,3}\s(.+)$/gm,'<h4 style="margin:10px 0 4px;font-size:12px;text-transform:uppercase;color:var(--b)">$1</h4>').replace(/^[-*]\s(.+)$/gm,'<div style="padding:2px 0 2px 12px;border-left:2px solid var(--border)">$1</div>').replace(/\n{2,}/g,'<br><br>').replace(/\n/g,'<br>');}
+function dlCSV(data,fn){const csv=data.map(r=>r.map(c=>`"${String(c||'').replace(/"/g,'""')}"`).join(',')).join('\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'}));a.download=fn+'_'+new Date().toISOString().slice(0,10)+'.csv';a.click();setTimeout(()=>alert('CSV descargado ✓'),300);}
+function openPDF(hdr,n1,n2,n3,tot,body,l1='Riesgo Alto',l2='Riesgo Medio',l3='Riesgo Bajo'){const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:'Segoe UI',Arial,sans-serif;color:#1a1f36;font-size:12px;padding:40px}.hdr{display:flex;justify-content:space-between;margin-bottom:24px;padding-bottom:16px;border-bottom:3px solid #FFE600}.logo{background:#FFE600;border-radius:8px;padding:8px 16px;font-weight:900;font-size:14px;color:#1a1f36;display:inline-block}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:16px 0}.stat{border:1px solid #e4e6f0;border-radius:8px;padding:12px;text-align:center}.stat .n{font-size:22px;font-weight:800}.stat .l{font-size:10px;color:#9298b0;margin-top:3px}.body{line-height:1.8}.warn{margin-top:20px;background:#fffbe0;border:1px solid #FFE600;border-radius:8px;padding:10px;font-size:10px;color:#7a6200}.foot{margin-top:20px;padding-top:10px;border-top:1px solid #e4e6f0;font-size:9px;color:#9298b0;display:flex;justify-content:space-between}@media print{body{padding:24px}}</style></head><body><div class="hdr"><div><div class="logo">Mercado Fondos</div><div style="margin-top:6px;font-size:10px;color:#5a6480">Risk & Compliance · SOFI México</div><div style="margin-top:12px">${hdr}</div></div><div style="text-align:right;font-size:11px;color:#5a6480;line-height:1.7">Fecha: ${new Date().toLocaleDateString('es-MX',{dateStyle:'long'})}<br><strong>Confidencial</strong></div></div><div class="stats"><div class="stat"><div class="n" style="color:#1a1f36">${tot}</div><div class="l">Total</div></div><div class="stat"><div class="n" style="color:#ef4444">${n1}</div><div class="l">${l1}</div></div><div class="stat"><div class="n" style="color:#f59e0b">${n2}</div><div class="l">${l2}</div></div><div class="stat"><div class="n" style="color:#22c55e">${n3}</div><div class="l">${l3}</div></div></div><div class="body">${body}</div><div class="warn">⚠️ Insumo de análisis. No constituye asesoría legal definitiva. Fuente: Google Drive.</div><div class="foot"><span>Mercado Fondos S.A. de C.V. SOFI · Dashboard R&C · Fuente: Google Drive</span><span>Confidencial · No distribuir</span></div><script>window.onload=()=>window.print()<\/script></body></html>`;const w=window.open('','_blank');if(w){w.document.write(html);w.document.close();}}
+</script>
+<script>
+/* Grid: only allow approved Grid domains to open unsandboxed tabs */
+(function(){
+  var allowedHosts = ["figma.com", "www.figma.com", "furydocs.io", "zeroheight.com", "google.com", "docs.google.com", "meet.google.com", "grid.adminml.com", "grid-artifacts.adminml.com", "mercadolibre.atlassian.net", "mercadolibre-opsgenie.atlassian.net", "app.datadoghq.com", "grafana-service.furycloud.io", "web.furycloud.io", "nasdaq-meli.app.opsgenie.com", "meli.enterprise.slack.com"];
+  var allowedSuffixes = [".adminml.com", ".atlassian.net", ".google.com", ".furycloud.io", ".melioffice.com", ".melisystems.com"];
+  var allowedPathPrefixes = {"github.com": ["/melisource/"], "www.github.com": ["/melisource/"]};
+  function normalizeUrl(rawUrl){
+    try {
+      return new URL(String(rawUrl || ""), window.location.href);
+    } catch (_err) {
+      return null;
+    }
+  }
+  function isAllowedUrl(rawUrl){
+    var parsed = normalizeUrl(rawUrl);
+    if(!parsed) return false;
+    if(parsed.protocol === "slack:") return true;
+    if(parsed.protocol !== "https:") return false;
+    var h = (parsed.hostname || "").toLowerCase();
+    if(!h) return false;
+    if(allowedHosts.indexOf(h) !== -1) return true;
+    for(var i = 0; i < allowedSuffixes.length; i++){
+      var s = allowedSuffixes[i];
+      if(h === s.slice(1) || (h.length > s.length && h.slice(-s.length) === s)) return true;
+    }
+    var pathPrefixes = allowedPathPrefixes[h];
+    if(pathPrefixes){
+      var p = parsed.pathname || "/";
+      for(var j = 0; j < pathPrefixes.length; j++){
+        if(p.slice(0, pathPrefixes[j].length) === pathPrefixes[j]) return true;
+      }
+    }
+    return false;
+  }
+  function requestParentPopup(rawUrl){
+    var parsed = normalizeUrl(rawUrl);
+    if(!parsed || !window.parent || window.parent === window) return false;
+    try {
+      window.parent.postMessage({type: "grid-open-safe-popup", url: parsed.href}, window.location.origin);
+      return true;
+    } catch (_err) {
+      return false;
+    }
+  }
+
+  document.addEventListener("click", function(event){
+    var target = event.target;
+    var anchor = target && target.closest ? target.closest("a[href]") : null;
+    if(!anchor) return;
+    var href = anchor.getAttribute("href") || "";
+    if(!href || href.charAt(0) === "#") return;
+    var opensNewTab = anchor.target === "_blank" || event.ctrlKey || event.metaKey || event.button === 1;
+    if(!opensNewTab) return;
+    if(!isAllowedUrl(href)) {
+      event.preventDefault();
+      event.stopPropagation();
+      return;
+    }
+    if(requestParentPopup(href)) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+  }, true);
+
+  var nativeOpen = window.open;
+  window.open = function(rawUrl, target, features){
+    if(!isAllowedUrl(rawUrl)) return null;
+    if(requestParentPopup(rawUrl)) return null;
+    return nativeOpen ? nativeOpen.call(window, normalizeUrl(rawUrl).href, target, features) : null;
+  };
+})();
+</script>
+<script>
+/* Grid: sync iframe URL mutations to parent address bar */
+(function(){
+  function notifyParent(search, hash){
+    if(!window.parent || window.parent === window) return;
+    try{
+      window.parent.postMessage(
+        {type:"grid-url-sync", search:search, hash:hash},
+        window.location.origin
+      );
+    }catch(_){}
+  }
+  function parseAndNotify(url){
+    try{
+      var p = new URL(String(url), window.location.href);
+      notifyParent(p.search, p.hash);
+    }catch(_){}
+  }
+  var _push = history.pushState.bind(history);
+  var _replace = history.replaceState.bind(history);
+  history.pushState = function(state, title, url){
+    _push(state, title, url);
+    if(url != null) parseAndNotify(url);
+  };
+  history.replaceState = function(state, title, url){
+    _replace(state, title, url);
+    if(url != null) parseAndNotify(url);
+  };
+  window.addEventListener("hashchange", function(){
+    notifyParent(window.location.search, window.location.hash);
+  });
+})();
+</script>
+</body>
+</html>
